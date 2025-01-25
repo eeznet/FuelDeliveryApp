@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truck Location</title>
+    <link rel="stylesheet" href="/public/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #333;
+        }
+        .location-container {
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        #loadLocationButton {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        #loadLocationButton:hover {
+            background-color: #003d82;
+        }
+        .loading {
+            font-size: 18px;
+            color: #888;
+            text-align: center;
+        }
+        .error-message {
+            color: red;
+            font-size: 18px;
+            text-align: center;
+        }
+        .location-details p {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .location-details {
+            padding: 10px;
+            background-color: #f4f4f4;
+            border-radius: 5px;
+        }
+        /* Enhanced styling for mobile responsiveness */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .location-container {
+                margin: 0;
+                padding: 15px;
+            }
+            #loadLocationButton {
+                width: 100%;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Truck Location</h1>
+    <div class="location-container">
+        <button id="loadLocationButton">Load Location</button>
+        <div id="location" class="loading" aria-live="polite">
+            <p>Click the button to load the truck location...</p>
+        </div>
+    </div>
+
+    <!-- Real-time Updates with Socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const locationDiv = document.getElementById('location');
+        const loadLocationButton = document.getElementById('loadLocationButton');
+
+        const socket = io();
+
+        // Real-time updates using socket.io
+        socket.on('truck-location-update', (data) => {
+            locationDiv.innerHTML = `
+                <div class="location-details">
+                    <p><strong>Driver ID:</strong> ${data.driverId}</p>
+                    <p><strong>Latitude:</strong> ${data.latitude}</p>
+                    <p><strong>Longitude:</strong> ${data.longitude}</p>
+                    <p><strong>Last Updated:</strong> ${new Date(data.updatedAt).toLocaleString()}</p>
+                </div>
+            `;
+        });
+
+        // Fetch location on button click
+        loadLocationButton.addEventListener('click', function () {
+            locationDiv.innerHTML = '<p class="loading">Loading...</p>'; // Show loading state
+
+            fetch('/api/truck-location')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        locationDiv.innerHTML = `<p>${data.message}</p>`;
+                    } else {
+                        const { latitude, longitude, updatedAt } = data;
+                        locationDiv.innerHTML = `
+                            <div class="location-details">
+                                <p><strong>Latitude:</strong> ${latitude}</p>
+                                <p><strong>Longitude:</strong> ${longitude}</p>
+                                <p><strong>Last Updated:</strong> ${new Date(updatedAt).toLocaleString()}</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    locationDiv.innerHTML = `<p class="error-message">Error loading location: ${error.message}</p>`;
+                });
+        });
+    </script>
+</body>
+</html>
+<script src="/public/view-trucklocation.js"></script>

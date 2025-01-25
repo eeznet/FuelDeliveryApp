@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - #<%= invoice._id %> | Fuel Delivery App</title>
+    <link rel="stylesheet" href="/public/style.css">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        button {
+            margin-top: 20px;
+            background-color: #0056b3;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #003d82;
+        }
+        a.button-link {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            background-color: #0056b3;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        a.button-link:hover {
+            background-color: #003d82;
+        }
+        footer {
+            margin-top: 40px;
+            font-size: small;
+            text-align: center;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Invoice #<%= invoice._id %></h1>
+
+        <!-- Display invoice details -->
+        <table>
+            <caption>Details of the invoice</caption>
+            <tr>
+                <th>Invoice Number</th>
+                <td><%= invoice._id %></td>
+            </tr>
+            <tr>
+                <th>Fuel Type</th>
+                <td><%= invoice.fuelType %></td>
+            </tr>
+            <tr>
+                <th>Liters Delivered</th>
+                <td><%= invoice.litersDelivered %></td>
+            </tr>
+            <tr>
+                <th>Price per Liter</th>
+                <td>$<%= invoice.pricePerLiter.toFixed(2) %></td>
+            </tr>
+            <tr>
+                <th>Total Amount</th>
+                <td>$<%= (invoice.litersDelivered * invoice.pricePerLiter).toFixed(2) %></td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td><%= invoice.status %></td>
+            </tr>
+            <tr>
+                <th>Delivery Address</th>
+                <td><%= invoice.deliveryAddress %></td>
+            </tr>
+            <tr>
+                <th>Client</th>
+                <td><%= invoice.client?.name || 'Unknown' %></td>
+            </tr>
+        </table>
+
+        <!-- Print Button -->
+        <button onclick="window.print()" aria-label="Print this invoice">Print Invoice</button>
+
+        <!-- Back to Dashboard -->
+        <p><a href="/dashboard" class="button-link">Back to Dashboard</a></p>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>Web-based application developed and managed by <a href="https://www.eeznet.com" target="_blank" rel="noopener noreferrer">EEZNET</a></p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .form-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .form-container input,
+        .form-container select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .form-container button:hover {
+            background-color: #003d82;
+        }
+        .form-container p {
+            text-align: center;
+            font-size: small;
+        }
+        .error-message {
+            color: red;
+            background-color: #ffe6e6;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            border: 1px solid red;
+            border-radius: 4px;
+        }
+        /* Password visibility toggle */
+        .password-container {
+            position: relative;
+        }
+        .password-container input {
+            padding-right: 30px; /* Space for the icon */
+        }
+        .password-container .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+        }
+
+        /* Mobile responsiveness */
+        @media screen and (max-width: 600px) {
+            .form-container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Register</h1>
+
+        <!-- Display any error messages -->
+        <div class="error-message">
+            <% if (errorMessage) { %>
+                <p><%= errorMessage %></p>
+            <% } %>
+        </div>
+
+        <form action="/auth/register" method="POST">
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" required placeholder="Enter your email" aria-label="Email Address" autocomplete="email">
+
+            <label for="password">Password:</label>
+            <div class="password-container">
+                <input type="password" name="password" id="password" required placeholder="Enter your password" aria-label="Password" autocomplete="new-password" minlength="8">
+                <span class="toggle-password" onclick="togglePassword()">👁️</span>
+            </div>
+
+            <label for="role">Role:</label>
+            <select name="role" id="role" required aria-label="Select your role">
+                <option value="owner">Owner</option>
+                <option value="driver">Driver</option>
+                <option value="client">Client</option>
+            </select>
+
+            <button type="submit">Register</button>
+        </form>
+
+        <p>Already have an account? <a href="/login.html">Login here</a></p>
+    </div>
+
+    <script>
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordField = document.getElementById('password');
+            const passwordToggle = document.querySelector('.toggle-password');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                passwordToggle.textContent = '🙈'; // Change icon to "hide"
+            } else {
+                passwordField.type = 'password';
+                passwordToggle.textContent = '👁️'; // Change icon to "show"
+            }
+        }
+
+        // Focus on the first input field when the page loads
+        document.getElementById('email').focus();
+    </script>
+</body>
+</html>

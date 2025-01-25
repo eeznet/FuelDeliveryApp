@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .report-container {
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .role-buttons button {
+            margin: 10px;
+            padding: 10px 15px;
+            border: none;
+            background-color: #0056b3;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .role-buttons button:hover {
+            background-color: #003d82;
+        }
+        .loading {
+            font-size: 18px;
+            color: #888;
+            text-align: center;
+        }
+        .error-message {
+            color: red;
+            font-size: 18px;
+            text-align: center;
+        }
+        .container {
+            padding: 20px;
+        }
+        h1, h2 {
+            font-size: 24px;
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0056b3;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Accessibility Improvements */
+        .role-buttons button:focus {
+            outline: 3px solid #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Fuel Delivery Report</h1>
+
+        <!-- Report Data Section -->
+        <div class="report-container">
+            <div id="reportData" class="loading" aria-live="polite">
+                <p>Loading report data...</p>
+                <div class="spinner" role="status" aria-live="polite"></div>
+            </div>
+        </div>
+
+        <!-- Role-Specific Content -->
+        <div class="role-buttons" role="region" aria-labelledby="roleFeatures">
+            <h2 id="roleFeatures">Role-Specific Features</h2>
+
+            <% if (user.role === 'owner') { %>
+                <button onclick="location.href='/manage-deliveries'" aria-label="Manage Fuel Deliveries" accesskey="1">Manage Deliveries</button>
+                <button onclick="location.href='/view-invoices'" aria-label="View Invoices" accesskey="2">View Invoices</button>
+                <button onclick="location.href='/customer-trends'" aria-label="View Customer Trends" accesskey="3">View Customer Trends</button>
+            <% } %>
+
+            <% if (user.role === 'driver') { %>
+                <button onclick="location.href='/log-trip'" aria-label="Log Fuel Trip" accesskey="1">Log Trip</button>
+                <button onclick="location.href='/track-stock'" aria-label="Track Fuel Stock" accesskey="2">Track Stock</button>
+            <% } %>
+
+            <% if (user.role === 'client') { %>
+                <button onclick="location.href='/view-invoices'" aria-label="View Invoices" accesskey="1">View Invoices</button>
+                <button onclick="location.href='/track-delivery'" aria-label="Track Fuel Delivery" accesskey="2">Track Delivery</button>
+            <% } %>
+        </div>
+
+        <p><a href="/logout">Logout</a></p>
+
+        <p style="font-size: small;">Web-based application developed and managed by EEZNET</p>
+    </div>
+
+    <!-- JavaScript for fetching and displaying report data -->
+    <script>
+        async function fetchReportData() {
+            try {
+                const response = await fetch('/api/report-data');
+                const data = await response.json();
+
+                // Check if there is any data available
+                const reportContainer = document.getElementById('reportData');
+                if (data && Object.keys(data).length > 0) {
+                    reportContainer.innerHTML = ` 
+                        <h3>Report Details</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    reportContainer.innerHTML = '<p>No report data available.</p>';
+                }
+            } catch (error) {
+                document.getElementById('reportData').innerHTML = '<p class="error-message">Failed to load report data.</p>';
+            }
+        }
+
+        // Call the function to load report data when the page is loaded
+        window.onload = fetchReportData;
+    </script>
+</body>
+</html>

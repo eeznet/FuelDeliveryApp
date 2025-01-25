@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Delivery App - Dashboard</title>
+    <link rel="stylesheet" href="/public/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Dynamic Greeting -->
+        <h1>Welcome, <%= user.name || 'User' %>! Welcome to the Fuel Delivery App Dashboard</h1>
+        <p>Select an option to get started:</p>
+        
+        <!-- Navigation Buttons -->
+        <div class="button-container">
+            <a href="/truck-location" class="button" aria-label="View Truck Locations">View Truck Locations</a>
+            <a href="/invoices" class="button" aria-label="View Invoices">View Invoices</a>
+        </div>
+
+        <!-- Logout Button -->
+        <div class="logout-container">
+            <a href="/logout" class="button" aria-label="Logout">Logout</a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Web-based application developed and managed by EEZNET</p>
+    </footer>
+</body>
+</html>

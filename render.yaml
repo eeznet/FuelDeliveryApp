@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: fuel-delivery-app
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: cd dist && node server.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production 

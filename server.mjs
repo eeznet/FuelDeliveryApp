@@ -2,11 +2,13 @@ import dotenv from "dotenv";
 import express from "express";
 import mysql from "mysql2/promise"; // MySQL with Promises
 import bodyParser from "body-parser";
-import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import { connectMongoDB, disconnectMongoDB } from './config/mongoose.js';
-import mongoose from 'mongoose'; // Add this import at the top
-import invoiceRoutes from './routes/invoiceRoutes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { connectMongoDB } from './config/mongoose.js';
+import mongoose from 'mongoose';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config();
@@ -60,48 +62,62 @@ const connectMysql = async () => {
     }
 })();
 
-// Only connect to databases if not in test environment
-if (process.env.NODE_ENV !== 'test') {
+// Dynamic imports for routes
+const loadRoutes = async () => {
     try {
-        await connectMysql();
-        await connectMongoDB();
-        console.log('✅ All database connections established');
+        const authRoutes = (await import('./routes/authRoutes.js')).default;
+        const userRoutes = (await import('./routes/userRoutes.js')).default;
+        const invoiceRoutes = (await import('./routes/invoiceRoutes.js')).default;
+
+        // Apply routes
+        app.use("/api/auth", authRoutes);
+        app.use("/api/user", userRoutes);
+        app.use("/api/invoice", invoiceRoutes);
+
+        console.log('✅ Routes loaded successfully');
     } catch (error) {
-        console.error('❌ Database connection error:', error.message);
+        console.error('❌ Error loading routes:', error);
+        throw error;
+    }
+};
+
+// Initialize app
+const initializeApp = async () => {
+    try {
+        // Connect to databases if not in test environment
+        if (process.env.NODE_ENV !== 'test') {
+            await connectMysql();
+            await connectMongoDB();
+            console.log('✅ All database connections established');
+        }
+
+        // Load routes
+        await loadRoutes();
+
+        // Default Root Route
+        app.get("/", (req, res) => {
+            res.send("Welcome to the Fuel Delivery App!");
+        });
+
+        // Start server
+        const PORT = process.env.NODE_ENV === 'test' ? 0 : (process.env.PORT || 3000);
+        const server = app.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${server.address().port}`);
+        });
+
+        return server;
+    } catch (error) {
+        console.error('❌ Error initializing app:', error);
         process.exit(1);
     }
-}
+};
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/invoice", invoiceRoutes);
-
-// Default Root Route
-app.get("/", (req, res) => {
-    res.send("Welcome to the Fuel Delivery App!");
-});
-
-// Test MySQL Connection Route
-app.get("/test-mysql", async (req, res) => {
-    try {
-        const [results] = await mysqlConnection.query("SELECT * FROM users LIMIT 1");
-        res.json(results);
-    } catch (err) {
-        res.status(500).json({ message: "MySQL error", error: err.message });
-    }
-});
-
-// Start Server
-const PORT = process.env.NODE_ENV === 'test' ? 0 : (process.env.PORT || 3000);
-const server = app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${server.address().port}`);
-});
+// Initialize the app
+const server = await initializeApp();
 
 // Graceful Shutdown
 const shutdownServer = async () => {
     console.log("🛑 Shutting down server...");
-
     return new Promise((resolve) => {
         server.close(async () => {
             console.log("✅ Server closed");

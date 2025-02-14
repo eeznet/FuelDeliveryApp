@@ -70,6 +70,7 @@ const Login = () => {
                             onChange={handleChange}
                             margin="normal"
                             required
+                            autoComplete="current-password"
                         />
                         <Button
                             fullWidth

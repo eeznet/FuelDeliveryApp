@@ -82,6 +82,7 @@ const Register = () => {
                             onChange={handleChange}
                             margin="normal"
                             required
+                            autoComplete="new-password"
                             helperText="Password must be at least 8 characters long"
                         />
                         <TextField

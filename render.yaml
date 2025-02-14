@@ -6,4 +6,33 @@ services:
     startCommand: cd dist && node server.mjs
     envVars:
       - key: NODE_ENV
-        value: production 
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: DB_HOST
+        value: mysql
+      - key: DB_USER
+        value: root
+      - key: DB_PASSWORD
+        value: password123
+      - key: DB_NAME
+        value: fuel_delivery_db
+    dependencies:
+      - name: mysql
+
+  - type: pserv
+    name: mysql
+    env: docker
+    dockerfilePath: ./Dockerfile.mysql
+    plan: starter
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 10
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        value: password123
+      - key: MYSQL_DATABASE
+        value: fuel_delivery_db 

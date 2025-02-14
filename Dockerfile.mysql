@@ -1,0 +1,11 @@
+FROM mysql:8.0
+
+ENV MYSQL_ROOT_PASSWORD=password123
+ENV MYSQL_DATABASE=fuel_delivery_db
+ENV MYSQL_USER=root
+ENV MYSQL_PASSWORD=password123
+
+# Add any initialization scripts
+COPY ./init.sql /docker-entrypoint-initdb.d/
+
+EXPOSE 3306 

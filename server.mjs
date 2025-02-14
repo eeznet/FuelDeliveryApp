@@ -1,11 +1,11 @@
 import dotenv from "dotenv";
 import express from "express";
-import mysql from "mysql2/promise"; // MySQL with Promises
 import bodyParser from "body-parser";
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { connectMongoDB } from './config/mongoose.js';
-import mongoose from 'mongoose';
+import path from "path";
+import { fileURLToPath } from "url";
+import { connectMongoDB } from "./config/mongoose.js";
+import mongoose from "mongoose";
+import pool from "./config/database.js"; // Import PostgreSQL connection pool
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,35 +29,15 @@ requiredEnvVars.forEach((envVar) => {
 const app = express();
 
 // Middleware
-app.use(bodyParser.json());  
+app.use(bodyParser.json());
 
-// MySQL Connection Pool
-let mysqlConnection;
-const connectMysql = async () => {
-    try {
-        mysqlConnection = await mysql.createPool({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-            waitForConnections: true,
-            connectionLimit: 10,
-        });
-        console.log("✅ MySQL Connected");
-    } catch (err) {
-        console.error("❌ MySQL Connection Error:", err.message);
-        process.exit(1);
-    }
-};
-
-// Test MySQL Connection on Startup
+// Test PostgreSQL Connection on Startup
 (async () => {
-    await connectMysql();
     try {
-        await mysqlConnection.query("SELECT 1");
-        console.log("✅ MySQL is active");
+        await pool.query("SELECT 1");
+        console.log("✅ PostgreSQL connected successfully");
     } catch (err) {
-        console.error("❌ MySQL Test Query Failed:", err.message);
+        console.error("❌ PostgreSQL Test Query Failed:", err.message);
         process.exit(1);
     }
 })();
@@ -74,9 +54,9 @@ const loadRoutes = async () => {
         app.use("/api/user", userRoutes);
         app.use("/api/invoice", invoiceRoutes);
 
-        console.log('✅ Routes loaded successfully');
+        console.log("✅ Routes loaded successfully");
     } catch (error) {
-        console.error('❌ Error loading routes:', error);
+        console.error("❌ Error loading routes:", error);
         throw error;
     }
 };
@@ -85,10 +65,10 @@ const loadRoutes = async () => {
 const initializeApp = async () => {
     try {
         // Connect to databases if not in test environment
-        if (process.env.NODE_ENV !== 'test') {
-            await connectMysql();
+        if (process.env.NODE_ENV !== "test") {
+            // PostgreSQL connection is already tested above via pool
             await connectMongoDB();
-            console.log('✅ All database connections established');
+            console.log("✅ All database connections established");
         }
 
         // Load routes
@@ -100,14 +80,14 @@ const initializeApp = async () => {
         });
 
         // Start server
-        const PORT = process.env.NODE_ENV === 'test' ? 0 : (process.env.PORT || 3000);
+        const PORT = process.env.NODE_ENV === "test" ? 0 : (process.env.PORT || 3000);
         const server = app.listen(PORT, () => {
             console.log(`🚀 Server running on port ${server.address().port}`);
         });
 
         return server;
     } catch (error) {
-        console.error('❌ Error initializing app:', error);
+        console.error("❌ Error initializing app:", error);
         process.exit(1);
     }
 };
@@ -122,10 +102,9 @@ const shutdownServer = async () => {
         server.close(async () => {
             console.log("✅ Server closed");
             try {
-                if (mysqlConnection) {
-                    await mysqlConnection.end();
-                    console.log("✅ MySQL Connection Closed");
-                }
+                // Close the PostgreSQL pool
+                await pool.end();
+                console.log("✅ PostgreSQL pool closed");
                 if (mongoose.connection.readyState) {
                     await mongoose.connection.close();
                     console.log("✅ MongoDB Connection Closed");

@@ -3,7 +3,7 @@ services:
     name: fuel-delivery-app
     env: node
     buildCommand: npm install && npm run build
-    startCommand: cd dist && node server.mjs
+    startCommand: cd dist && NODE_ENV=production node server.mjs
     envVars:
       - key: NODE_ENV
         value: production
@@ -12,15 +12,15 @@ services:
       - key: JWT_SECRET
         sync: false
       - key: DB_HOST
-        value: mysql
+        value: dpg-cunj0p23esus73ciric0-a
       - key: DB_USER
-        value: root
+        value: fuel_delivery_user
       - key: DB_PASSWORD
-        value: password123
+        value: vcDMwd55ajsFUnZqlPuItAm1k9bIn88N
       - key: DB_NAME
         value: fuel_delivery_db
-    dependencies:
-      - name: mysql
+      - key: PORT
+        value: 5432
 
   - type: pserv
     name: mysql

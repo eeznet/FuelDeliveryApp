@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import driverController from '../controllers/drivercontroller';  // Assuming controller exists
+import driverController from '../controllers/driverController';  // Assuming controller exists
 import authMiddleware from '../middleware/authMiddleware';
 import logger from '../config/logger'; // Importing logger
 

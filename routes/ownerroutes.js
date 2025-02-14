@@ -2,7 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import authMiddleware from '../middleware/authMiddleware';
 import roleCheck from '../middleware/roleCheck'; // Ensure correct path
-import OwnerController from '../controllers/ownercontroller'; // Correct path
+import OwnerController from '../controllers/ownerController'; // Correct path
 import logger from '../config/logger'; // Import logger for better error handling
 
 const router = express.Router();

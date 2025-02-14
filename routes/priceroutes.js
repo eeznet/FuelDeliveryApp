@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import PriceController from '../controllers/pricecontroller'; // Ensure controller exists
+import PriceController from '../controllers/priceController'; // Ensure controller exists
 import authMiddleware from '../middleware/authMiddleware'; // Authentication middleware
 import roleCheck from '../middleware/roleCheck'; // Role-based access control middleware
 import logger from '../config/logger'; // For logging errors

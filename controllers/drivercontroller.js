@@ -1,4 +1,4 @@
-import Driver from "../models/driver.js"; // Link to the driver model
+import Driver from "../models/user.js"; 
 import logger from "../config/logger.js";
 
 // Helper function to verify driver role

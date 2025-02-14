@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import express from "express";
 import mysql from "mysql2/promise"; // MySQL with Promises
 import bodyParser from "body-parser";
-import authRoutes from "./routes/authroutes.js";
+import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { connectMongoDB, disconnectMongoDB } from './config/mongoose.js';
 import mongoose from 'mongoose'; // Add this import at the top

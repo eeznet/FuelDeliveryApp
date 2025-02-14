@@ -1,4 +1,4 @@
-import Client from '../models/client.js';
+import Client from '../models/user.js';
 import logger from '../config/logger.js';
 
 export const getAllClients = async (req, res) => {

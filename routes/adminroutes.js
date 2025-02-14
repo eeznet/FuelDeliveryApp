@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware'); 
-const adminController = require('../controllers/admincontroller');
+const adminController = require('../controllers/adminController');
 const logger = require('../config/logger'); // Use structured logging
 
 // Admin dashboard route

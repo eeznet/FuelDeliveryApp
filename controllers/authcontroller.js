@@ -126,3 +126,9 @@ export const logout = (req, res) => {
     });
   }
 };
+
+export default {
+  register,
+  login,
+  logout
+};

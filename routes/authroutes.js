@@ -1,7 +1,7 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import { register, login, logout } from '../controllers/authController.js';
-import User from '../models/user.js';
+import pool from '../config/database.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
@@ -10,14 +10,14 @@ const router = express.Router();
 const validateRegistration = [
     body('name').notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Invalid email').custom(async (value) => {
-        const existingUser = await User.findOne({ email: value });
-        if (existingUser) {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [value]);
+        if (result.rows.length > 0) {
             throw new Error('Email already exists');
         }
         return true;
     }),
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
-    body('role').isIn(['owner', 'driver', 'client', 'admin']).withMessage('Invalid role'),
+    body('role').isIn(['client', 'driver']).withMessage('Invalid role'),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

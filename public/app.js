@@ -46,3 +46,69 @@ document.getElementById('loginBtn')?.addEventListener('click', () => {
     const password = document.getElementById('passwordInput').value;
     loginUser(email, password);
 });
+
+function showTab(tabName) {
+    document.querySelectorAll('.auth-form').forEach(form => form.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById(`${tabName}-form`).style.display = 'block';
+    document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+}
+
+async function handleLogin(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: formData.get('email'),
+                password: formData.get('password')
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            localStorage.setItem('token', data.token);
+            window.location.href = '/dashboard';
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert('Login failed. Please try again.');
+    }
+}
+
+async function handleRegister(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    
+    try {
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: formData.get('name'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                role: formData.get('role')
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert('Registration successful! Please login.');
+            showTab('login');
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert('Registration failed. Please try again.');
+    }
+}

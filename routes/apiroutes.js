@@ -1,126 +1,130 @@
-const express = require('express');
-const truckLocationController = require('../controllers/trucklocationController');
-const invoiceController = require('../controllers/invoiceController');
-const authMiddleware = require('../middleware/authMiddleware');
-const Invoice = require('../models/invoice');
-const User = require('../models/user');
-const mongoose = require('mongoose');
-const logger = require('../config/logger'); // Use structured logging
+import express from 'express';
+import { auth, checkRole } from '../middleware/authMiddleware.js';
+import pool from '../config/database.js';
+import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Truck Location - Driver Route
-router.get('/truck-location/:id', authMiddleware(['driver']), truckLocationController.getTruckLocation);
-
-// Create Invoice - Owner Only
-router.post('/invoice', authMiddleware(['owner']), invoiceController.createInvoice);
-
-// Get All Invoices (Owner Only)
-router.get('/invoices', authMiddleware(['owner']), async (req, res) => {
-    const { page = 1, limit = 10 } = req.query;
-
+// Deliveries Routes
+router.get('/deliveries/driver', auth, checkRole(['driver']), async (req, res) => {
     try {
-        const pageNumber = parseInt(page, 10);
-        const pageLimit = parseInt(limit, 10);
-
-        if (isNaN(pageNumber) || isNaN(pageLimit) || pageNumber <= 0 || pageLimit <= 0) {
-            return res.status(400).json({ success: false, message: 'Invalid pagination parameters' });
-        }
-
-        const [invoices, totalCount] = await Promise.all([
-            Invoice.find()
-                .select('invoiceId clientName totalAmount dueDate status')
-                .skip((pageNumber - 1) * pageLimit)
-                .limit(pageLimit),
-            Invoice.countDocuments(),
-        ]);
-
-        res.json({
-            success: true,
-            data: invoices,
-            pagination: { total: totalCount, page: pageNumber, limit: pageLimit, totalPages: Math.ceil(totalCount / pageLimit) },
-        });
+        const result = await pool.query(
+            'SELECT * FROM deliveries WHERE driver_id = $1 ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.json(result.rows);
     } catch (error) {
-        logger.error('Error fetching invoices', { error: error.message });
-        res.status(500).json({ success: false, message: 'Error fetching invoices. Please try again later.' });
+        logger.error('Error fetching driver deliveries:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch deliveries' });
     }
 });
 
-// Get Single Invoice (Owner Only)
-router.get('/invoice/:invoiceId', authMiddleware(['owner']), async (req, res) => {
-    const { invoiceId } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(invoiceId)) {
-        return res.status(400).json({ success: false, message: 'Invalid invoice ID format.' });
-    }
-
+// Admin Stats Route
+router.get('/admin/stats', auth, checkRole(['admin']), async (req, res) => {
     try {
-        const invoice = await Invoice.findById(invoiceId);
-        if (!invoice) {
-            return res.status(404).json({ success: false, message: 'Invoice not found' });
-        }
-        res.json({ success: true, data: invoice });
+        const stats = {
+            totalUsers: (await pool.query('SELECT COUNT(*) FROM users')).rows[0].count,
+            totalOrders: (await pool.query('SELECT COUNT(*) FROM invoices')).rows[0].count,
+            activeDrivers: (await pool.query('SELECT COUNT(*) FROM users WHERE role = $1 AND is_active = true', ['driver'])).rows[0].count,
+            pendingDeliveries: (await pool.query('SELECT COUNT(*) FROM deliveries WHERE status = $1', ['pending'])).rows[0].count
+        };
+        res.json(stats);
     } catch (error) {
-        logger.error('Error fetching invoice', { error: error.message });
-        res.status(500).json({ success: false, message: 'Error fetching invoice. Please try again later.' });
+        logger.error('Error fetching admin stats:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch stats' });
     }
 });
 
-// Update Invoice - Owner Only
-router.put('/invoice/:invoiceId', authMiddleware(['owner']), invoiceController.updateInvoice);
-
-// Delete Invoice - Owner Only
-router.delete('/invoice/:invoiceId', authMiddleware(['owner']), invoiceController.deleteInvoice);
-
-// Admin Route - Get All Invoices (Pagination)
-router.get('/admin/invoices', authMiddleware(['admin']), async (req, res) => {
-    const { page = 1, limit = 10 } = req.query;
-
+// Owner Stats Route
+router.get('/owner/stats', auth, checkRole(['owner']), async (req, res) => {
     try {
-        const pageNumber = parseInt(page, 10);
-        const pageLimit = parseInt(limit, 10);
-
-        const [invoices, totalCount] = await Promise.all([
-            Invoice.find()
-                .select('invoiceId clientName totalAmount dueDate status')
-                .skip((pageNumber - 1) * pageLimit)
-                .limit(pageLimit),
-            Invoice.countDocuments(),
-        ]);
-
-        res.json({
-            success: true,
-            data: invoices,
-            pagination: { total: totalCount, page: pageNumber, limit: pageLimit, totalPages: Math.ceil(totalCount / pageLimit) },
-        });
+        const stats = {
+            totalRevenue: (await pool.query('SELECT SUM(total_price) FROM invoices')).rows[0].sum,
+            monthlyRevenue: (await pool.query('SELECT SUM(total_price) FROM invoices WHERE created_at >= NOW() - INTERVAL \'30 days\'')).rows[0].sum,
+            totalDeliveries: (await pool.query('SELECT COUNT(*) FROM deliveries')).rows[0].count,
+            activeOrders: (await pool.query('SELECT COUNT(*) FROM invoices WHERE status = $1', ['pending'])).rows[0].count
+        };
+        res.json(stats);
     } catch (error) {
-        logger.error('Error fetching admin invoices', { error: error.message });
-        res.status(500).json({ success: false, message: 'Error fetching invoices. Please try again later.' });
+        logger.error('Error fetching owner stats:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch stats' });
     }
 });
 
-// Protected Route - Authenticated Access Only
-router.get('/protected', authMiddleware(), (req, res) => {
-    res.json({ success: true, message: 'This is a protected route' });
-});
-
-// Test MongoDB - Get all users (for debugging purposes)
-router.get('/test-mongo', async (req, res) => {
+// Price Management Routes
+router.post('/price', auth, checkRole(['owner']), async (req, res) => {
     try {
-        const users = await User.find().select('-password'); // Exclude password for security
-        res.json(users);
+        const { pricePerLiter } = req.body;
+        await pool.query(
+            'INSERT INTO fuel_prices (price_per_liter, created_by) VALUES ($1, $2)',
+            [pricePerLiter, req.user.id]
+        );
+        res.json({ success: true, message: 'Price updated successfully' });
     } catch (error) {
-        logger.error('Error fetching users from MongoDB', { error: error.message });
-        res.status(500).json({ success: false, message: 'Error fetching data from MongoDB' });
+        logger.error('Error updating fuel price:', error);
+        res.status(500).json({ success: false, message: 'Failed to update price' });
     }
 });
 
-// Catch-all error handler for API routes
-router.use((err, req, res, next) => {
-    logger.error('API Routes Error', { error: err.message, stack: err.stack });
-    const response = { success: false, message: 'Internal server error' };
-    if (process.env.NODE_ENV !== 'production') response.stack = err.stack;
-    res.status(500).json(response);
+// Admin Routes
+router.get('/admin/users', auth, checkRole(['admin']), async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id, name, email, role, is_active FROM users WHERE role != $1',
+            ['owner']
+        );
+        res.json(result.rows);
+    } catch (error) {
+        logger.error('Error fetching users:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch users' });
+    }
 });
 
-module.exports = router;
+router.put('/admin/users/:id', auth, checkRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { is_active } = req.body;
+        
+        await pool.query(
+            'UPDATE users SET is_active = $1 WHERE id = $2',
+            [is_active, id]
+        );
+        
+        res.json({ success: true, message: 'User updated successfully' });
+    } catch (error) {
+        logger.error('Error updating user:', error);
+        res.status(500).json({ success: false, message: 'Failed to update user' });
+    }
+});
+
+// Delivery Routes
+router.put('/deliveries/:id/status', auth, checkRole(['driver']), async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        
+        const { id } = req.params;
+        const { status } = req.body;
+        
+        await client.query(
+            'UPDATE deliveries SET status = $1, completed_at = NOW() WHERE id = $2 AND driver_id = $3',
+            [status, id, req.user.id]
+        );
+        
+        await client.query(
+            'UPDATE invoices SET status = $1 WHERE id = (SELECT invoice_id FROM deliveries WHERE id = $2)',
+            [status, id]
+        );
+        
+        await client.query('COMMIT');
+        res.json({ success: true, message: 'Delivery status updated' });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        logger.error('Error updating delivery status:', error);
+        res.status(500).json({ success: false, message: 'Failed to update delivery status' });
+    } finally {
+        client.release();
+    }
+});
+
+export default router;

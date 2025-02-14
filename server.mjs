@@ -8,6 +8,9 @@ import { connectMongoDB } from "./config/mongoose.js";
 import mongoose from "mongoose";
 import logger from "./config/logger.js";
 import fs from 'fs';
+import apiRoutes from './routes/apiRoutes.js';
+import cors from 'cors';
+import invoiceRoutes from './routes/invoiceRoutes.js';
 
 const { Pool } = pg;
 
@@ -34,6 +37,15 @@ const app = express();
 
 // Middleware
 app.use(bodyParser.json());
+app.use(express.static('public'));
+
+// Add this after other middleware
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+        ? 'https://fueldeliverywebapp.onrender.com' 
+        : 'http://localhost:3001',
+    credentials: true
+}));
 
 // PostgreSQL Connection Pool (uses DB_PORT if defined, otherwise defaults to 5432)
 const pool = new Pool({
@@ -87,6 +99,10 @@ const loadRoutes = async () => {
   }
 };
 
+// Add this after other route middleware
+app.use('/api', apiRoutes);
+app.use('/api/invoice', invoiceRoutes);
+
 // Initialize app
 const initializeApp = async () => {
   try {
@@ -124,13 +140,12 @@ const initializeApp = async () => {
 
     // Default Root Route
     app.get("/", (req, res) => {
-      res.json({
-        message: "Welcome to the Fuel Delivery App!",
-        status: "running",
-        environment: process.env.NODE_ENV,
-        mongodb: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-        postgres: pgSuccess ? "connected" : "disconnected",
-      });
+      res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    });
+
+    // Add this after the root route
+    app.get("/dashboard", (req, res) => {
+      res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
     });
 
     // Start server

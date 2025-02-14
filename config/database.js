@@ -1,10 +1,13 @@
-import pkg from "pg";
-import dotenv from "dotenv";
-import logger from "./logger.js"; // Winston logger
+import pg from 'pg';
+import dotenv from 'dotenv';
+import logger from './logger.js';
+import fs from 'fs';
+import bcrypt from 'bcryptjs';
+import fsPromises from 'fs/promises';
 
 dotenv.config();
 
-const { Pool } = pkg;
+const { Pool } = pg;
 
 // Validate required environment variables
 const requiredEnvVars = ["DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME", "PORT"];
@@ -15,27 +18,73 @@ if (missingVars.length > 0) {
     process.exit(1);
 }
 
-// Create PostgreSQL connection pool
+// Create PostgreSQL pool
 const pool = new Pool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
-    max: 10, // Connection pool size
-    idleTimeoutMillis: 30000, // 30 seconds idle timeout
+    port: process.env.DB_PORT || 5432,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
-// Verify database connection
-(async () => {
+// Initialize database tables
+const initializeDatabase = async () => {
     try {
         const client = await pool.connect();
-        logger.info("✅ PostgreSQL Database connected successfully");
+        
+        // Read and execute schema.sql
+        const schema = await fs.readFile('./database/schema.sql', 'utf8');
+        await client.query(schema);
+        
+        // Create default owner if doesn't exist
+        const ownerExists = await client.query(
+            'SELECT * FROM users WHERE email = $1',
+            [process.env.ADMIN_EMAIL]
+        );
+        
+        if (ownerExists.rows.length === 0) {
+            const hashedPassword = await bcrypt.hash('admin123', 10);
+            await client.query(
+                'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)',
+                ['System Owner', process.env.ADMIN_EMAIL, hashedPassword, 'owner']
+            );
+            logger.info('Default owner account created');
+        }
+
+        // Set initial fuel price if none exists
+        const priceExists = await client.query('SELECT * FROM fuel_prices LIMIT 1');
+        if (priceExists.rows.length === 0) {
+            await client.query(
+                'INSERT INTO fuel_prices (price_per_liter, created_by) VALUES ($1, $2)',
+                [2.50, 1] // Default price of $2.50 per liter
+            );
+            logger.info('Initial fuel price set');
+        }
+
         client.release();
-    } catch (err) {
-        logger.error("❌ PostgreSQL connection failed:", err);
-        process.exit(1);
+        logger.info('✅ Database initialized successfully');
+    } catch (error) {
+        logger.error('❌ Database initialization failed:', error);
+        throw error;
     }
-})();
+};
+
+// Test database connection
+pool.on('connect', () => {
+    logger.info('✅ PostgreSQL connected');
+});
+
+pool.on('error', (err) => {
+    logger.error('❌ PostgreSQL error:', err);
+});
+
+// Initialize database on startup
+initializeDatabase().catch(err => {
+    logger.error('Failed to initialize database:', err);
+    process.exit(1);
+});
 
 export default pool;

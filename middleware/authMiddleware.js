@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
+import pool from "../config/database.js";
 import logger from "../config/logger.js";
-import User from "../models/user.js";
 
 export const auth = async (req, res, next) => {
     try {
@@ -10,47 +9,40 @@ export const auth = async (req, res, next) => {
         if (!token) {
             return res.status(401).json({
                 success: false,
-                message: 'Unauthorized'
+                message: 'No token provided'
             });
         }
-
-        try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'test-secret');
-            const user = await User.findById(decoded.id);
-
-            if (!user) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Unauthorized'
-                });
-            }
-
-            if (!user.isActive) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Account disabled'
-                });
-            }
-
-            req.user = user;
-            next();
-        } catch (error) {
-            if (error.name === 'TokenExpiredError') {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Token has expired'
-                });
-            }
+        
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // Get user from database
+        const result = await pool.query(
+            'SELECT id, name, email, role, is_active FROM users WHERE id = $1',
+            [decoded.id]
+        );
+        
+        const user = result.rows[0];
+        if (!user) {
             return res.status(401).json({
                 success: false,
-                message: 'Unauthorized'
+                message: 'User not found'
             });
         }
+        
+        if (!user.is_active) {
+            return res.status(403).json({
+                success: false,
+                message: 'Account is disabled'
+            });
+        }
+        
+        req.user = user;
+        next();
     } catch (error) {
         logger.error(`Auth middleware error: ${error.message}`);
-        return res.status(401).json({
+        res.status(401).json({
             success: false,
-            message: 'Unauthorized'
+            message: 'Authentication failed'
         });
     }
 };

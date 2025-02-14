@@ -21,6 +21,14 @@ services:
         value: fuel_delivery_db
       - key: PORT
         value: 5432
+      - key: ADMIN_EMAIL
+        value: eeznetsolutions@gmail.com
+    buildFilter:
+      paths:
+        - package.json
+        - src/**
+        - public/**
+        - database/**
 
   - type: pserv
     name: mysql
@@ -35,4 +43,22 @@ services:
       - key: MYSQL_ROOT_PASSWORD
         value: password123
       - key: MYSQL_DATABASE
-        value: fuel_delivery_db 
+        value: fuel_delivery_db
+
+  # Frontend service
+  - type: web
+    name: fuel-delivery-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://fuel-delivery-backend.onrender.com/api
+
+databases:
+  - name: fuel-delivery-db
+    plan: starter 

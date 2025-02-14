@@ -1,5 +1,7 @@
 const TruckLocation = require('../models/trucklocation');
-const io = require('../server'); // Import `io` instance for real-time updates
+const mongoose = require('mongoose');
+const io = require('../server');
+const User = require('../models/user');
 
 // Utility function for sending standardized error responses
 const sendErrorResponse = (res, statusCode, message, errorDetails = null) => {
@@ -11,12 +13,20 @@ const sendErrorResponse = (res, statusCode, message, errorDetails = null) => {
     });
 };
 
+// Middleware for role-based access control (Admin/Owner)
+const checkAdminOrOwnerRole = (req, res, next) => {
+    if (!req.user || (req.user.role !== 'owner' && req.user.role !== 'admin')) {
+        return res.status(403).json({ success: false, message: 'Access denied: Admin or Owner required' });
+    }
+    next();
+};
+
 // Get Truck Location by Driver ID
-exports.getTruckLocation = async (req, res) => {
+const getTruckLocation = async (req, res) => {
     const { id } = req.params;
 
-    if (!id) {
-        return sendErrorResponse(res, 400, 'Driver ID is required');
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return sendErrorResponse(res, 400, 'Invalid driver ID format');
     }
 
     try {
@@ -24,6 +34,7 @@ exports.getTruckLocation = async (req, res) => {
         if (!location) {
             return sendErrorResponse(res, 404, 'Truck location not found');
         }
+        console.log(`Fetched truck location for driver ID: ${id}`);
         res.status(200).json({ success: true, data: location });
     } catch (error) {
         sendErrorResponse(res, 500, 'Error fetching truck location', error);
@@ -31,15 +42,17 @@ exports.getTruckLocation = async (req, res) => {
 };
 
 // Update Truck Location (Driver updates their location)
-exports.updateTruckLocation = async (req, res) => {
+const updateTruckLocation = async (req, res) => {
     const { driverId, latitude, longitude } = req.body;
 
-    // Validation
-    if (!driverId || latitude === undefined || longitude === undefined) {
-        return sendErrorResponse(res, 400, 'Driver ID, latitude, and longitude are required');
+    if (!mongoose.Types.ObjectId.isValid(driverId)) {
+        return sendErrorResponse(res, 400, 'Invalid driver ID format');
     }
 
-    // Validate latitude and longitude ranges
+    if (latitude === undefined || longitude === undefined) {
+        return sendErrorResponse(res, 400, 'Latitude and longitude are required');
+    }
+
     if (latitude < -90 || latitude > 90) {
         return sendErrorResponse(res, 400, 'Latitude must be between -90 and 90 degrees');
     }
@@ -51,10 +64,9 @@ exports.updateTruckLocation = async (req, res) => {
         const updatedLocation = await TruckLocation.findOneAndUpdate(
             { driverId },
             { latitude, longitude, updatedAt: new Date() },
-            { new: true, upsert: true } // Create if not found
+            { new: true, upsert: true }
         );
 
-        // Broadcast real-time location update
         io.emit('truck-location-update', {
             driverId,
             latitude,
@@ -62,6 +74,7 @@ exports.updateTruckLocation = async (req, res) => {
             updatedAt: updatedLocation.updatedAt,
         });
 
+        console.log(`Updated truck location for driver ID: ${driverId}`);
         res.status(200).json({
             success: true,
             message: 'Truck location updated successfully',
@@ -73,10 +86,8 @@ exports.updateTruckLocation = async (req, res) => {
 };
 
 // Get All Truck Locations with Pagination (Admin/Owner)
-exports.getAllTruckLocations = async (req, res) => {
+const getAllTruckLocations = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
-
-    // Validate pagination
     const pageNumber = parseInt(page, 10);
     const pageLimit = parseInt(limit, 10);
 
@@ -85,16 +96,26 @@ exports.getAllTruckLocations = async (req, res) => {
     }
 
     try {
-        const truckLocations = await TruckLocation.find()
-            .skip((pageNumber - 1) * pageLimit)
-            .limit(pageLimit);
+        const result = await TruckLocation.aggregate([
+            { $skip: (pageNumber - 1) * pageLimit },
+            { $limit: pageLimit },
+            {
+                $facet: {
+                    truckLocations: [{ $project: { _id: 1, driverId: 1, latitude: 1, longitude: 1, updatedAt: 1 } }],
+                    totalCount: [{ $count: "totalLocations" }]
+                }
+            }
+        ]);
+
+        const truckLocations = result[0].truckLocations;
+        const totalLocations = result[0].totalCount.length > 0 ? result[0].totalCount[0].totalLocations : 0;
+        const totalPages = Math.ceil(totalLocations / pageLimit);
 
         if (!truckLocations.length) {
             return sendErrorResponse(res, 404, 'No truck locations found');
         }
 
-        const totalLocations = await TruckLocation.countDocuments();
-        const totalPages = Math.ceil(totalLocations / pageLimit);
+        console.log('Fetched all truck locations');
 
         res.status(200).json({
             success: true,
@@ -108,4 +129,10 @@ exports.getAllTruckLocations = async (req, res) => {
     } catch (error) {
         sendErrorResponse(res, 500, 'Error fetching truck locations', error);
     }
+};
+
+module.exports = {
+    getTruckLocation,
+    updateTruckLocation,
+    getAllTruckLocations: [checkAdminOrOwnerRole, getAllTruckLocations],
 };

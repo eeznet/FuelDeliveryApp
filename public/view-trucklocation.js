@@ -2,10 +2,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadLocationButton = document.getElementById('loadLocationButton');
     const locationContainer = document.getElementById('location');
 
+    // Set up ARIA live region for dynamic updates
+    locationContainer.setAttribute('aria-live', 'polite');
+
+    // Function to update button state (loading / idle)
+    const updateButtonState = (isLoading) => {
+        if (isLoading) {
+            loadLocationButton.disabled = true;  // Disable the button while loading
+            loadLocationButton.setAttribute('aria-busy', 'true'); // ARIA attribute for busy state
+            loadLocationButton.innerHTML = 'Loading...'; // Change button text
+        } else {
+            loadLocationButton.disabled = false;  // Re-enable the button after loading
+            loadLocationButton.setAttribute('aria-busy', 'false'); // Remove ARIA busy state
+            loadLocationButton.innerHTML = 'Load Location'; // Reset button text
+        }
+    };
+
     // Function to load truck location
     const loadTruckLocation = async () => {
         locationContainer.innerHTML = '<p>Loading location...</p>'; // Show loading state
-        loadLocationButton.disabled = true;  // Disable the button while loading
+        updateButtonState(true); // Update button state to loading
 
         try {
             const response = await fetch('/api/truck-location');
@@ -28,9 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error fetching location:', error);
-            locationContainer.innerHTML = '<p class="error-message">Error fetching location data. Please try again later.</p>';
+            locationContainer.innerHTML = `
+                <p class="error-message">Error fetching location data. Please try again later.</p>
+            `;
         } finally {
-            loadLocationButton.disabled = false;  // Re-enable the button after the fetch
+            updateButtonState(false); // Reset button state
         }
     };
 

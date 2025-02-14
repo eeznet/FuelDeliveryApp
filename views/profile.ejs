@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Fuel Delivery App</title>
+    <link rel="stylesheet" href="/public/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Your Profile</h1>
+
+        <% if (message) { %>
+            <div class="alert <%= message.type %>">
+                <%= message.text %>
+            </div>
+        <% } %>
+
+        <form action="/profile/update" method="POST">
+            <label for="name">Full Name:</label>
+            <input type="text" name="name" id="name" value="<%= user.name %>" required>
+
+            <label for="email">Email Address:</label>
+            <input type="email" name="email" id="email" value="<%= user.email %>" readonly>
+
+            <label for="phone">Phone Number:</label>
+            <input type="text" name="phone" id="phone" value="<%= user.phone || '' %>">
+
+            <button type="submit" class="button">Update Profile</button>
+        </form>
+
+        <div class="back-link">
+            <a href="/dashboard" class="button">Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

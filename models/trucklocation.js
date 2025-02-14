@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const geolib = require('geolib'); // Library for geospatial calculations
+import mongoose from 'mongoose';
+import geolib from 'geolib'; // Library for geospatial calculations
 
 // Define the TruckLocation schema
 const truckLocationSchema = new mongoose.Schema(
@@ -8,19 +8,7 @@ const truckLocationSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User', // Reference to the User model for drivers
             required: [true, 'Driver ID is required'],
-            validate: {
-                validator: async function (value) {
-                    // Ensure the driverId exists in the User collection
-                    const driverExists = await mongoose.model('User').exists({ _id: value });
-                    if (!driverExists) {
-                        throw new Error('Driver ID does not exist.');
-                    }
-                    return true;
-                },
-                message: 'Invalid driver ID',
-            },
         },
-        // Current location stored using GeoJSON format
         location: {
             type: { type: String, enum: ['Point'], required: true },
             coordinates: {
@@ -28,18 +16,12 @@ const truckLocationSchema = new mongoose.Schema(
                 required: [true, 'Coordinates are required'],
                 validate: {
                     validator: function (v) {
-                        // Validate longitude and latitude ranges
-                        return v[0] >= -180 && v[0] <= 180 && v[1] >= -90 && v[1] <= 90;
+                        return v.length === 2 && v[0] >= -180 && v[0] <= 180 && v[1] >= -90 && v[1] <= 90;
                     },
                     message: 'Invalid coordinates',
                 },
             },
         },
-        updatedAt: {
-            type: Date,
-            default: Date.now, // Updates whenever location is modified
-        },
-        // History of locations with timestamps
         locationHistory: [
             {
                 coordinates: {
@@ -55,6 +37,7 @@ const truckLocationSchema = new mongoose.Schema(
         totalDistanceTraveled: {
             type: Number,
             default: 0, // in kilometers
+            min: 0,
         },
     },
     { timestamps: true } // Automatically add createdAt and updatedAt fields
@@ -63,36 +46,43 @@ const truckLocationSchema = new mongoose.Schema(
 // Geospatial index for location-based queries
 truckLocationSchema.index({ location: '2dsphere' });
 
+// Index for fast lookups by driver
+truckLocationSchema.index({ driverId: 1 });
+
 // Middleware to track location changes and calculate distance traveled
 truckLocationSchema.pre('save', function (next) {
     if (this.isModified('location')) {
-        const previousLocation = this.locationHistory[this.locationHistory.length - 1];
+        const lastLocation = this.locationHistory[this.locationHistory.length - 1];
 
-        // Check if this is the first location update
-        if (!previousLocation) {
-            this.totalDistanceTraveled = 0; // Ensure no distance is added if it's the first record
-        } else {
+        // Only add new location if it's different from the last recorded location
+        if (!lastLocation || (lastLocation.coordinates[0] !== this.location.coordinates[0] || lastLocation.coordinates[1] !== this.location.coordinates[1])) {
+            
             // Calculate distance if there is a previous location
-            const distance = geolib.getDistance(
-                { latitude: previousLocation.coordinates[1], longitude: previousLocation.coordinates[0] },
-                { latitude: this.location.coordinates[1], longitude: this.location.coordinates[0] }
-            );
-            this.totalDistanceTraveled += distance / 1000; // Convert meters to kilometers
+            if (lastLocation) {
+                const distance = geolib.getDistance(
+                    { latitude: lastLocation.coordinates[1], longitude: lastLocation.coordinates[0] },
+                    { latitude: this.location.coordinates[1], longitude: this.location.coordinates[0] }
+                ) / 1000; // Convert meters to kilometers
+
+                this.totalDistanceTraveled += distance;
+            }
+
+            // Add new location to history
+            this.locationHistory.push({
+                coordinates: this.location.coordinates,
+                timestamp: new Date(),
+            });
+
+            // Limit history to 100 records
+            const MAX_HISTORY = 100;
+            if (this.locationHistory.length > MAX_HISTORY) {
+                this.locationHistory.shift();
+            }
         }
-
-        // Add the current location to the history
-        this.locationHistory.push({
-            coordinates: this.location.coordinates,
-            timestamp: new Date(),
-        });
-
-        // Update the `updatedAt` field
-        this.updatedAt = new Date();
     }
     next();
 });
 
 // Create and export the TruckLocation model
 const TruckLocation = mongoose.model('TruckLocation', truckLocationSchema);
-
-module.exports = TruckLocation;
+export default TruckLocation;

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Fuel Delivery App</title>
+    
+    <meta name="description" content="Fuel Delivery App - Manage your fuel orders with ease. Get started by logging in.">
+    <meta name="keywords" content="fuel delivery, fuel orders, login, dashboard">
+    
+    <meta property="og:title" content="Fuel Delivery App">
+    <meta property="og:description" content="Manage your fuel orders with our easy-to-use platform. Log in to get started.">
+    <meta property="og:image" content="/public/images/og-image.png">
+    <meta property="og:url" content="https://www.yourapp.com">
+
+    <link rel="stylesheet" href="/public/style.css">
+    
+    <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png">
+    <link rel="manifest" href="/public/site.webmanifest">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Welcome to the Fuel Delivery App</h1>
+            <h2>Fast, Reliable, and Efficient Fuel Management</h2>
+
+            <!-- Dynamic User Greeting -->
+            <% if (user) { %>
+                <p>Hello, <strong><%= user.name %></strong>! Manage your fuel orders below.</p>
+                <a href="/dashboard" class="button" aria-label="Go to your dashboard">Dashboard</a>
+                <a href="/logout" class="button logout" aria-label="Log out">Logout</a>
+            <% } else { %>
+                <p>Your trusted partner for seamless fuel delivery. Log in or sign up to get started.</p>
+                <a href="/login.html" class="button" aria-label="Go to the login page">Login</a>
+                <a href="/register.html" class="button signup" aria-label="Go to the signup page">Sign Up</a>
+            <% } %>
+        </div>
+    </header>
+
+    <footer class="footer" role="contentinfo">
+        <p>
+            Web-based application developed and managed by 
+            <a href="https://www.eeznet.com" target="_blank" rel="noopener noreferrer">
+                EEZNET
+            </a>
+        </p>
+    </footer>
+</body>
+</html>

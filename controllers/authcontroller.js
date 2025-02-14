@@ -1,105 +1,109 @@
-// controllers/authcontroller.js
-const User = require('../models/user'); // Ensure the correct model path
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+import jwt from "jsonwebtoken";
+import User from "../models/user.js";
+import bcrypt from "bcryptjs";
+import logger from "../config/logger.js";
 
-// Constants for roles
-const VALID_ROLES = ['owner', 'driver', 'client', 'admin'];
-
-// Register a new user
-exports.registerUser = async (req, res) => {
-    const { email, password, role } = req.body;
-
-    // Validate required fields
-    if (!email || !password || !role) {
-        return res.status(400).json({ success: false, message: 'Email, password, and role are required' });
+// Register user
+export const register = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Check for existing user
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      logger.warn(`Registration failed: Email already exists - ${email}`);
+      return res.status(400).json({
+        success: false,
+        message: 'Email already exists'
+      });
     }
 
-    // Validate role
-    if (!VALID_ROLES.includes(role)) {
-        return res.status(400).json({ success: false, message: 'Invalid role provided' });
-    }
+    const user = new User(req.body);
+    await user.save();
 
-    // Validate password length
-    if (password.length < 6) {
-        return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long' });
-    }
-
-    try {
-        // Check if user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ success: false, message: 'User already exists' });
-        }
-
-        // Ensure only one admin can be created
-        if (role === 'admin' && email !== process.env.ADMIN_EMAIL) {
-            return res.status(403).json({ success: false, message: 'You are not authorized to create an admin account' });
-        }
-
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create and save the user
-        const newUser = new User({ email, password: hashedPassword, role });
-        await newUser.save();
-
-        // Generate a JWT
-        const token = jwt.sign(
-            { id: newUser._id, role: newUser.role },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRATION || '1h' }
-        );
-
-        res.status(201).json({
-            success: true,
-            message: 'User registered successfully',
-            data: { id: newUser._id, email: newUser.email, role: newUser.role },
-            token,
-        });
-    } catch (error) {
-        console.error('Error during user registration:', error);
-        res.status(500).json({ success: false, message: 'Error registering user', error: error.message });
-    }
+    logger.info(`User registered successfully: ${email}`);
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully'
+    });
+  } catch (error) {
+    logger.error(`Registration error: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 };
 
 // Login user
-exports.loginUser = async (req, res) => {
+export const login = async (req, res) => {
+  try {
     const { email, password } = req.body;
 
-    // Validate required fields
-    if (!email || !password) {
-        return res.status(400).json({ success: false, message: 'Email and password are required' });
+    const user = await User.findOne({ email }).select('+password');
+    
+    if (!user) {
+      logger.warn(`Login failed: User not found - ${email}`);
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
     }
 
-    try {
-        // Check if user exists
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
-
-        // Compare passwords
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ success: false, message: 'Invalid password' });
-        }
-
-        // Generate a JWT
-        const token = jwt.sign(
-            { id: user._id, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRATION || '1h' }
-        );
-
-        res.status(200).json({
-            success: true,
-            message: 'Login successful',
-            data: { id: user._id, email: user.email, role: user.role },
-            token,
-        });
-    } catch (error) {
-        console.error('Error during user login:', error);
-        res.status(500).json({ success: false, message: 'Error logging in', error: error.message });
+    if (!user.isActive) {
+      logger.warn(`Login failed: Account disabled - ${email}`);
+      return res.status(403).json({
+        success: false,
+        message: 'Account disabled'
+      });
     }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      logger.warn(`Login failed: Invalid credentials - ${email}`);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+    const token = user.generateToken();
+    logger.info(`Login successful: ${email}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    logger.error(`Login error: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Logout user
+export const logout = (req, res) => {
+  try {
+    res.clearCookie("token", { httpOnly: true });
+    logger.info("User logged out successfully");
+    res.status(200).json({ 
+      success: true, 
+      message: "Logged out successfully" 
+    });
+  } catch (error) {
+    logger.error(`Logout error: ${error.message}`);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error during logout" 
+    });
+  }
 };

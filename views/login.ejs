@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Fuel Delivery App</title>
+    <meta name="description" content="Login to access your Fuel Delivery App account.">
+    <meta name="keywords" content="login, fuel delivery, user authentication">
+    <meta property="og:title" content="Login - Fuel Delivery App">
+    <meta property="og:description" content="Access your Fuel Delivery App account.">
+    <meta property="og:image" content="/public/images/og-image.png">
+    <meta property="og:url" content="https://www.yourapp.com/login">
+    <link rel="stylesheet" href="/public/style.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png">
+</head>
+<body>
+    <div class="container">
+        <h1>Login to Fuel Delivery App</h1>
+
+        <!-- ✅ Fix: Ensure `message` is always checked before outputting -->
+        <% if (message && message.text) { %>
+            <div class="alert <%= message.type %>" role="alert" aria-live="polite">
+                <%= message.text %>
+            </div>
+        <% } %>
+
+        <form action="/auth/login" method="POST">
+            <label for="email">Email Address:</label>
+            <input type="email" name="email" id="email" required placeholder="Enter your email" 
+                aria-label="Enter your email address" autofocus aria-required="true" 
+                pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$">
+
+            <label for="password">Password:</label>
+            <input type="password" name="password" id="password" required placeholder="Enter your password" 
+                aria-label="Enter your password" aria-required="true">
+
+            <button type="submit" class="button">Login</button>
+        </form>
+
+        <p><a href="/forgot-password" class="button">Forgot Password?</a></p>
+
+        <div class="back-link">
+            <p>Don't have an account? <a href="/register" class="button">Register here</a></p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>
+            Web-based application developed and managed by 
+            <a href="https://www.eeznet.com" target="_blank" rel="noopener noreferrer">
+                EEZNET
+            </a>
+        </p>
+    </footer>
+
+    <!-- ✅ Fix: JavaScript block fully corrected -->
+    <% if (message && message.text) { %>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                setTimeout(function() {
+                    const messageAlert = document.querySelector('.alert');
+                    if (messageAlert) {
+                        messageAlert.style.display = 'none';
+                    }
+                    document.getElementById('email').focus();
+                }, 5000);
+            });
+        </script>
+    <% } %>
+
+</body>
+</html>

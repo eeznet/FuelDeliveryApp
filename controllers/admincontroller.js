@@ -1,75 +1,72 @@
-const User = require('../models/user'); // Adjust path if necessary
-const Invoice = require('../models/invoice'); // Ensure model exists
-const Price = require('../models/price'); // Ensure model exists
+import mongoose from "mongoose";
+import User from "../models/user.js";
+import Invoice from "../models/invoice.js";
+import Price from "../models/price.js";
+import logger from "../config/logger.js"; // Winston logger
 
-// Controller to handle admin dashboard access
+// Get Admin Dashboard Data
 const getAdminDashboard = async (req, res) => {
-    try {
-        // Fetch admin-relevant data
-        const userCount = await User.countDocuments();
-        const invoiceCount = await Invoice.countDocuments();
-        const recentPrices = await Price.find().sort({ createdAt: -1 }).limit(5);
+  try {
+    logger.info(`Admin Dashboard Request - Admin: ${req.user?.email || "Unknown"}`);
 
-        res.status(200).json({
-            success: true,
-            message: 'Admin Dashboard Data Retrieved',
-            data: {
-                userCount,
-                invoiceCount,
-                recentPrices: recentPrices || [], // Return an empty array if no prices are found
-            },
-        });
-    } catch (error) {
-        console.error('Error fetching admin dashboard data:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch admin dashboard data' });
-    }
+    const [userCount, invoiceCount, recentPrices] = await Promise.all([
+      User.countDocuments(),
+      Invoice.countDocuments(),
+      Price.find().sort({ createdAt: -1 }).limit(5).lean(), // Faster read operation
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: "Admin Dashboard Data Retrieved",
+      data: { userCount, invoiceCount, recentPrices },
+    });
+  } catch (error) {
+    logger.error(`Error fetching admin dashboard data: ${error.message}`);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
 };
 
-// Controller to manage user accounts (list, delete, etc.)
+// Manage Users - List All Users (Excluding Passwords)
 const manageUsers = async (req, res) => {
-    try {
-        const users = await User.find({}, '-password'); // Fetch users without exposing passwords
-        res.status(200).json({
-            success: true,
-            message: 'User list retrieved successfully',
-            data: users || [], // Return an empty array if no users are found
-        });
-    } catch (error) {
-        console.error('Error fetching user data:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch users' });
-    }
+  try {
+    logger.info(`Manage Users Request - Admin: ${req.user?.email || "Unknown"}`);
+
+    const users = await User.find().select("-password").lean(); // Exclude passwords, optimize performance
+    res.status(200).json({
+      success: true,
+      message: "User list retrieved successfully",
+      data: users,
+    });
+  } catch (error) {
+    logger.error(`Error fetching user data: ${error.message}`);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
 };
 
-// Controller to delete a user by ID (admin-only)
+// Delete User by ID (Admin-Only)
 const deleteUser = async (req, res) => {
-    try {
-        const { userId } = req.params;
+  try {
+    const { userId } = req.params;
+    logger.info(`Delete User Request - Admin: ${req.user?.email || "Unknown"}, Target User ID: ${userId}`);
 
-        // Validate userId
-        if (!userId) {
-            return res.status(400).json({ success: false, message: 'User ID is required' });
-        }
-
-        const deletedUser = await User.findByIdAndDelete(userId);
-
-        if (!deletedUser) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: 'User deleted successfully',
-            data: deletedUser,
-        });
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        res.status(500).json({ success: false, message: 'Failed to delete user' });
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: "Invalid User ID format" });
     }
+
+    const deletedUser = await User.findByIdAndDelete(userId).lean();
+    if (!deletedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+      data: { id: deletedUser._id, email: deletedUser.email },
+    });
+  } catch (error) {
+    logger.error(`Error deleting user: ${error.message}`);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
 };
 
-// Export the functions
-module.exports = {
-    getAdminDashboard,
-    manageUsers,
-    deleteUser,
-};
+export { getAdminDashboard, manageUsers, deleteUser };

@@ -73,9 +73,9 @@
 
         <!-- Report Data Section -->
         <div class="report-container">
-            <div id="reportData" class="loading" aria-live="polite">
+            <div id="reportData" class="loading" aria-live="polite" aria-busy="true">
                 <p>Loading report data...</p>
-                <div class="spinner" role="status" aria-live="polite"></div>
+                <div class="spinner" role="status" aria-label="Loading report data..."></div>
             </div>
         </div>
 
@@ -84,19 +84,17 @@
             <h2 id="roleFeatures">Role-Specific Features</h2>
 
             <% if (user.role === 'owner') { %>
-                <button onclick="location.href='/manage-deliveries'" aria-label="Manage Fuel Deliveries" accesskey="1">Manage Deliveries</button>
-                <button onclick="location.href='/view-invoices'" aria-label="View Invoices" accesskey="2">View Invoices</button>
-                <button onclick="location.href='/customer-trends'" aria-label="View Customer Trends" accesskey="3">View Customer Trends</button>
-            <% } %>
-
-            <% if (user.role === 'driver') { %>
-                <button onclick="location.href='/log-trip'" aria-label="Log Fuel Trip" accesskey="1">Log Trip</button>
-                <button onclick="location.href='/track-stock'" aria-label="Track Fuel Stock" accesskey="2">Track Stock</button>
-            <% } %>
-
-            <% if (user.role === 'client') { %>
-                <button onclick="location.href='/view-invoices'" aria-label="View Invoices" accesskey="1">View Invoices</button>
-                <button onclick="location.href='/track-delivery'" aria-label="Track Fuel Delivery" accesskey="2">Track Delivery</button>
+                <button onclick="location.href='/manage-deliveries'" aria-label="Manage Fuel Deliveries" accesskey="1" aria-pressed="false">Manage Deliveries</button>
+                <button onclick="location.href='/view-invoices'" aria-label="View Invoices" accesskey="2" aria-pressed="false">View Invoices</button>
+                <button onclick="location.href='/customer-trends'" aria-label="View Customer Trends" accesskey="3" aria-pressed="false">View Customer Trends</button>
+            <% } else if (user.role === 'driver') { %>
+                <button onclick="location.href='/log-trip'" aria-label="Log Fuel Trip" accesskey="1" aria-pressed="false">Log Trip</button>
+                <button onclick="location.href='/track-stock'" aria-label="Track Fuel Stock" accesskey="2" aria-pressed="false">Track Stock</button>
+            <% } else if (user.role === 'client') { %>
+                <button onclick="location.href='/view-invoices'" aria-label="View Invoices" accesskey="1" aria-pressed="false">View Invoices</button>
+                <button onclick="location.href='/track-delivery'" aria-label="Track Fuel Delivery" accesskey="2" aria-pressed="false">Track Delivery</button>
+            <% } else { %>
+                <p class="error-message">Your role does not have any specific actions available.</p>
             <% } %>
         </div>
 
@@ -112,10 +110,9 @@
                 const response = await fetch('/api/report-data');
                 const data = await response.json();
 
-                // Check if there is any data available
                 const reportContainer = document.getElementById('reportData');
                 if (data && Object.keys(data).length > 0) {
-                    reportContainer.innerHTML = ` 
+                    reportContainer.innerHTML = `
                         <h3>Report Details</h3>
                         <pre>${JSON.stringify(data, null, 2)}</pre>
                     `;
@@ -127,7 +124,6 @@
             }
         }
 
-        // Call the function to load report data when the page is loaded
         window.onload = fetchReportData;
     </script>
 </body>

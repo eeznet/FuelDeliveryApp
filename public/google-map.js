@@ -2,7 +2,7 @@ console.log('Google Maps script loaded');
 
 // Function to initialize the Google Map
 function initMap() {
-    // Default center for the map (San Francisco as a fallback)
+    // Default center for the map (Bloemfontein as a fallback)
     const defaultLocation = { lat: 37.7749, lng: -122.4194 };
 
     // Create a new map instance and set its options
@@ -10,6 +10,10 @@ function initMap() {
         zoom: 12,
         center: defaultLocation,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
+        styles: [
+            { "elementType": "geometry", "stylers": [{ "color": "#212121" }] },
+            { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] }
+        ], // Example custom styles
     });
 
     // Array to keep track of truck markers
@@ -38,9 +42,10 @@ function initMap() {
     }
 
     // Periodically update truck's location (every 10 seconds for demo purposes)
+    let refreshInterval = 10000; // Update every 10 seconds, can be configurable
     setInterval(() => {
         fetchTruckLocation(); // Simulate a call to fetch truck's live location
-    }, 10000);
+    }, refreshInterval);
 
     // Fetch truck location from the backend API
     async function fetchTruckLocation() {
@@ -74,6 +79,8 @@ function initMap() {
         }, () => {
             handleError('Geolocation failed. Default location displayed.');
         });
+    } else {
+        handleError('Geolocation is not supported by this browser. Default location displayed.');
     }
 
     // General error handling function

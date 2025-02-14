@@ -41,7 +41,11 @@
         }
         .error-message {
             color: red;
-            font-size: 18px;
+            background-color: #ffcccc;
+            padding: 10px;
+            font-weight: bold;
+            border: 1px solid red;
+            border-radius: 4px;
             text-align: center;
         }
         .location-details p {
@@ -53,6 +57,20 @@
             background-color: #f4f4f4;
             border-radius: 5px;
         }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0056b3;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         /* Enhanced styling for mobile responsiveness */
         @media (max-width: 600px) {
             body {
@@ -72,9 +90,10 @@
 <body>
     <h1>Truck Location</h1>
     <div class="location-container">
-        <button id="loadLocationButton">Load Location</button>
-        <div id="location" class="loading" aria-live="polite">
-            <p>Click the button to load the truck location...</p>
+        <button id="loadLocationButton" aria-label="Load truck location">Load Location</button>
+        <div id="location" class="loading" aria-live="assertive">
+            <p>Loading truck location...</p>
+            <div class="spinner"></div>
         </div>
     </div>
 
@@ -98,15 +117,21 @@
             `;
         });
 
+        // Handle Socket.io connection error
+        socket.on('connect_error', (error) => {
+            locationDiv.innerHTML = `<p class="error-message">Error connecting to the server: ${error.message}</p>`;
+        });
+
         // Fetch location on button click
         loadLocationButton.addEventListener('click', function () {
-            locationDiv.innerHTML = '<p class="loading">Loading...</p>'; // Show loading state
+            locationDiv.innerHTML = '<div class="spinner"></div>'; // Show loading spinner
+            loadLocationButton.textContent = 'Loading...'; // Change button text to "Loading..."
 
             fetch('/api/truck-location')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.message) {
-                        locationDiv.innerHTML = `<p>${data.message}</p>`;
+                    if (!data.latitude || !data.longitude || !data.updatedAt) {
+                        locationDiv.innerHTML = `<p class="error-message">Error: Missing location data.</p>`;
                     } else {
                         const { latitude, longitude, updatedAt } = data;
                         locationDiv.innerHTML = `
@@ -117,12 +142,40 @@
                             </div>
                         `;
                     }
+                    loadLocationButton.textContent = 'Load Location'; // Reset button text after fetch
                 })
                 .catch(error => {
                     locationDiv.innerHTML = `<p class="error-message">Error loading location: ${error.message}</p>`;
+                    loadLocationButton.textContent = 'Load Location'; // Reset button text after error
                 });
         });
+
+        // Call the function to load location immediately on page load
+        window.onload = function() {
+            locationDiv.innerHTML = '<div class="spinner"></div>'; // Show loading spinner on page load
+            loadLocationButton.textContent = 'Loading...'; // Change button text to "Loading..."
+            fetch('/api/truck-location')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.latitude || !data.longitude || !data.updatedAt) {
+                        locationDiv.innerHTML = `<p class="error-message">Error: Missing location data.</p>`;
+                    } else {
+                        const { latitude, longitude, updatedAt } = data;
+                        locationDiv.innerHTML = `
+                            <div class="location-details">
+                                <p><strong>Latitude:</strong> ${latitude}</p>
+                                <p><strong>Longitude:</strong> ${longitude}</p>
+                                <p><strong>Last Updated:</strong> ${new Date(updatedAt).toLocaleString()}</p>
+                            </div>
+                        `;
+                    }
+                    loadLocationButton.textContent = 'Load Location'; // Reset button text after fetch
+                })
+                .catch(error => {
+                    locationDiv.innerHTML = `<p class="error-message">Error loading location: ${error.message}</p>`;
+                    loadLocationButton.textContent = 'Load Location'; // Reset button text after error
+                });
+        };
     </script>
 </body>
 </html>
-<script src="/public/view-trucklocation.js"></script>

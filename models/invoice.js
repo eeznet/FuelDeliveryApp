@@ -1,20 +1,20 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-// Regex for basic address validation (you can refine this pattern further)
+// Regex for basic address validation (adjust as needed)
 const addressRegex = /^[a-zA-Z0-9\s,.'-]{3,}$/;
 
-// Define the Invoice schema
 const invoiceSchema = new mongoose.Schema(
     {
         clientId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User', // Reference to the User model for clients
+            ref: 'Client', // Updated to reference Client model
             required: [true, 'Client ID is required'],
         },
         deliveryAddress: {
             type: String,
             required: [true, 'Delivery address is required'],
             match: [addressRegex, 'Invalid delivery address format'],
+            trim: true
         },
         totalLiters: {
             type: Number,
@@ -42,10 +42,6 @@ const invoiceSchema = new mongoose.Schema(
             enum: ['paid', 'outstanding'],
             default: 'outstanding',
         },
-        date: {
-            type: Date,
-            default: Date.now,
-        },
         payments: [
             {
                 amount: {
@@ -63,11 +59,12 @@ const invoiceSchema = new mongoose.Schema(
                     required: [true, 'Payment method is required'],
                 },
                 transactionReference: {
-                    type: String, // Optional, to store a payment reference number
+                    type: String,
                     default: null,
+                    trim: true
                 },
                 confirmationStatus: {
-                    type: String, // Optional, to track payment confirmation status
+                    type: String,
                     enum: ['pending', 'confirmed', 'failed'],
                     default: 'pending',
                 },
@@ -75,68 +72,82 @@ const invoiceSchema = new mongoose.Schema(
         ],
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User', // Reference to the User model for who created the invoice
+            ref: 'User',
             default: null,
         },
         lastModifiedBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User', // Reference to the User model for who last modified the invoice
+            ref: 'User',
             default: null,
         },
     },
-    { timestamps: true } // Automatically adds createdAt and updatedAt fields
+    { timestamps: true }
 );
 
-// Index for efficient client-based queries
+// Indexes for performance
 invoiceSchema.index({ clientId: 1 });
+invoiceSchema.index({ status: 1 });
+invoiceSchema.index({ createdAt: 1 }); // Use timestamps for sorting
 
-// Method to calculate the final price after discount and tax
+// Calculate final price after discount and tax
 invoiceSchema.methods.calculateFinalPrice = function () {
     const discountAmount = (this.totalPrice * this.discount) / 100;
     const priceAfterDiscount = this.totalPrice - discountAmount;
     const taxAmount = (priceAfterDiscount * this.taxRate) / 100;
-    return priceAfterDiscount + taxAmount;
+    return parseFloat((priceAfterDiscount + taxAmount).toFixed(2)); // Avoid floating point errors
 };
 
-// Virtual field to calculate the total amount paid
+// Virtual: Total amount paid
 invoiceSchema.virtual('totalPaid').get(function () {
     return this.payments.reduce((sum, payment) => sum + payment.amount, 0);
 });
 
-// **Remove the real field `remainingBalance` and keep the virtual field**
-// Virtual field to calculate the remaining balance
+// Virtual: Remaining balance
 invoiceSchema.virtual('remainingBalance').get(function () {
-    return this.totalPrice - this.totalPaid;
+    return parseFloat((this.calculateFinalPrice() - this.totalPaid).toFixed(2));
 });
 
-// Method to check if the invoice is fully paid
+// Check if invoice is fully paid
 invoiceSchema.methods.isFullyPaid = function () {
-    return this.totalPaid >= this.totalPrice;
+    return this.totalPaid >= this.calculateFinalPrice();
 };
 
-// Middleware to update status before saving
+// Pre-save hook to update status correctly
 invoiceSchema.pre('save', function (next) {
-    // Prevent overpayment
-    if (this.totalPaid > this.totalPrice) {
-        return next(new Error('Total payments cannot exceed the total invoice price.'));
+    const totalPaid = this.payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+    if (totalPaid > this.calculateFinalPrice()) {
+        return next(new Error('Total payments cannot exceed the final invoice price.'));
     }
 
-    // Update status based on payments
-    this.status = this.isFullyPaid() ? 'paid' : 'outstanding';
+    this.status = totalPaid >= this.calculateFinalPrice() ? 'paid' : 'outstanding';
     next();
 });
 
-// Method to add a payment and ensure no overpayment
-invoiceSchema.methods.addPayment = function (payment) {
-    const newTotalPaid = this.totalPaid + payment.amount;
-    if (newTotalPaid > this.totalPrice) {
-        throw new Error('Total payments cannot exceed the total invoice price.');
+// Method to process payments safely by the owner
+invoiceSchema.methods.processPayment = async function (paymentData, user) {
+    if (this.status === 'paid') {
+        throw new Error('Invoice is already paid');
     }
-    this.payments.push(payment);
-    return this.save();
+
+    if (paymentData.amount !== this.totalPrice) {
+        throw new Error('Payment amount must match invoice total');
+    }
+
+    if (!['cash', 'card', 'bank_transfer'].includes(paymentData.method)) {
+        throw new Error('Invalid payment method');
+    }
+
+    this.payments.push({
+        amount: paymentData.amount,
+        method: paymentData.method,
+        processedBy: user._id,
+        date: new Date()
+    });
+
+    this.status = 'paid';
+    await this.save();
 };
 
-// Create and export the Invoice model
-const Invoice = mongoose.model('Invoice', invoiceSchema);
-
-module.exports = Invoice;
+// Exporting the model using ES6 default export
+export default mongoose.model('Invoice', invoiceSchema);

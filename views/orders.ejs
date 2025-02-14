@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order History - Fuel Delivery App</title>
+    <link rel="stylesheet" href="/public/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Your Orders</h1>
+
+        <% if (orders.length === 0) { %>
+            <p>No orders found.</p>
+        <% } else { %>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% orders.forEach(order => { %>
+                        <tr>
+                            <td><%= order.id %></td>
+                            <td><%= order.date %></td>
+                            <td>$<%= order.amount %></td>
+                            <td><%= order.status %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        <% } %>
+
+        <div class="back-link">
+            <a href="/dashboard" class="button">Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

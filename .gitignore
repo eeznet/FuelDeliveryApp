@@ -18,3 +18,12 @@ Thumbs.db
 
 # Coverage reports
 coverage/
+
+# Build output
+dist/
+build/
+
+# Docker build artifacts
+.docker/
+
+# Other environment-specific folders

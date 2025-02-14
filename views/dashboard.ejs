@@ -4,23 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fuel Delivery App - Dashboard</title>
+    <meta name="description" content="Welcome to the Fuel Delivery App Dashboard for managing your fuel delivery services.">
+    <meta name="keywords" content="fuel delivery, dashboard, manage fuel, location, invoices">
+    <meta property="og:title" content="Fuel Delivery App - Dashboard">
+    <meta property="og:description" content="Manage your truck locations, view invoices, and control fuel prices.">
     <link rel="stylesheet" href="/public/style.css">
 </head>
 <body>
     <div class="container">
         <!-- Dynamic Greeting -->
-        <h1>Welcome, <%= user.name || 'User' %>! Welcome to the Fuel Delivery App Dashboard</h1>
+        <h1>Welcome, <%= user.name || 'Guest' %>! Welcome to the Fuel Delivery App Dashboard</h1>
         <p>Select an option to get started:</p>
-        
-        <!-- Navigation Buttons -->
-        <div class="button-container">
-            <a href="/truck-location" class="button" aria-label="View Truck Locations">View Truck Locations</a>
-            <a href="/invoices" class="button" aria-label="View Invoices">View Invoices</a>
+
+        <!-- Error Message Section -->
+        <% if (errorMessage) { %>
+            <div class="error-message">
+                <p><%= errorMessage %></p>
+            </div>
+        <% } %>
+
+        <!-- Displaying User Info (optional) -->
+        <div class="user-info">
+            <p><strong>Email:</strong> <%= user.email %></p>
+            <p><strong>Role:</strong> <%= user.role %></p>
         </div>
+
+        <!-- Conditional Navigation for Owners -->
+        <% if (user.role === 'owner') { %>
+            <div class="button-container">
+                <a href="/truck-location" class="button">View Truck Locations</a>
+                <a href="/invoices" class="button">View Invoices</a>
+                <a href="/manage-prices" class="button">Manage Fuel Prices</a>
+            </div>
+        <% } else { %>
+            <div class="button-container">
+                <a href="/truck-location" class="button">View Truck Locations</a>
+                <a href="/invoices" class="button">View Invoices</a>
+            </div>
+        <% } %>
 
         <!-- Logout Button -->
         <div class="logout-container">
-            <a href="/logout" class="button" aria-label="Logout">Logout</a>
+            <a href="/logout" class="button">Logout</a>
         </div>
     </div>
 
@@ -28,5 +53,17 @@
     <footer class="footer">
         <p>Web-based application developed and managed by EEZNET</p>
     </footer>
+
+    <!-- JavaScript to hide error message after 5 seconds -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const errorMessageDiv = document.querySelector('.error-message');
+            if (errorMessageDiv) {
+                setTimeout(function () {
+                    errorMessageDiv.style.display = 'none';
+                }, 5000); // Hide error message after 5 seconds
+            }
+        });
+    </script>
 </body>
 </html>

@@ -34,7 +34,7 @@ a:hover {
 }
 
 /* Button Styling */
-button {
+.button { /* Ensure consistency between button and .button class */
     background-color: #0056b3;
     color: white;
     border: none;
@@ -45,15 +45,14 @@ button {
     transition: background-color 0.3s ease, transform 0.2s;
 }
 
-/* Button hover, focus, and active states */
-button:hover,
-button:focus {
+.button:hover,
+.button:focus { /* Ensure focus state is added */
     background-color: #003d82;
     transform: translateY(-2px);
     outline: none;
 }
 
-button:active {
+.button:active {
     transform: translateY(1px);
 }
 
@@ -63,7 +62,7 @@ button:active {
         font-size: 2rem;
     }
 
-    button {
+    .button {
         padding: 10px 15px;
         font-size: 0.9rem;
     }
@@ -82,7 +81,7 @@ button:active {
         font-size: 1.5rem;
     }
 
-    button {
+    .button {
         padding: 8px 12px;
         font-size: 0.8rem;
     }
@@ -94,7 +93,8 @@ button:active {
 }
 
 /* Form and Input Fields */
-input, textarea {
+input,
+textarea {
     padding: 10px;
     margin: 10px 0;
     border: 1px solid #ccc;
@@ -158,26 +158,6 @@ input[type="submit"]:hover {
     gap: 20px;
 }
 
-/* Button Styles in Button Container */
-.button {
-    background-color: #0056b3;
-    color: white;
-    padding: 12px 25px;
-    text-decoration: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    transition: background-color 0.3s ease, transform 0.2s;
-}
-
-.button:hover {
-    background-color: #003d82;
-    transform: translateY(-2px);
-}
-
-.button:active {
-    transform: translateY(1px);
-}
-
 /* Back Link */
 .back-link {
     margin-top: 15px;
@@ -212,7 +192,7 @@ input {
     border-radius: 5px;
 }
 
-button {
+.button {
     width: 100%;
     max-width: 400px;
     padding: 12px;
@@ -225,6 +205,7 @@ footer {
     text-align: center;
     font-size: 0.9rem;
     color: #777;
+    padding: 20px; /* Added padding for better spacing */
 }
 
 footer a {
@@ -235,4 +216,11 @@ footer a {
 footer a:hover {
     color: #003d82;
     text-decoration: underline;
+}
+
+/* Accessibility: Focus states */
+input:focus,
+textarea:focus,
+.button:focus {
+    outline: 3px solid #0056b3; /* Add a focus outline for better accessibility */
 }

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings - Fuel Delivery App</title>
+    <link rel="stylesheet" href="/public/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Account Settings</h1>
+
+        <% if (message) { %>
+            <div class="alert <%= message.type %>">
+                <%= message.text %>
+            </div>
+        <% } %>
+
+        <form action="/settings/update-password" method="POST">
+            <h2>Change Password</h2>
+            <label for="currentPassword">Current Password:</label>
+            <input type="password" name="currentPassword" id="currentPassword" required>
+
+            <label for="newPassword">New Password:</label>
+            <input type="password" name="newPassword" id="newPassword" required>
+
+            <label for="confirmPassword">Confirm New Password:</label>
+            <input type="password" name="confirmPassword" id="confirmPassword" required>
+
+            <button type="submit" class="button">Update Password</button>
+        </form>
+
+        <div class="back-link">
+            <a href="/dashboard" class="button">Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,26 +1,32 @@
-const Driver = require('../models/user'); // Assuming drivers are stored in the User model
-const jwt = require('jsonwebtoken');
+import Driver from "../models/driver.js"; // Link to the driver model
+import logger from "../config/logger.js";
+
+// Helper function to verify driver role
+const verifyDriverRole = (driver) => {
+    if (!driver || driver.role !== "driver") {
+        throw new Error("Access denied: Invalid driver role");
+    }
+};
 
 // Log a driver's trip
-exports.logTrip = async (req, res) => {
-    const { litersCollected, litersDelivered, truckRegistration } = req.body;
-
-    // Validate required fields
-    if (!litersCollected || !litersDelivered || !truckRegistration) {
-        return res.status(400).json({
-            success: false,
-            message: 'All fields are required (litersCollected, litersDelivered, truckRegistration)',
-        });
-    }
-
+export const logTrip = async (req, res) => {
     try {
-        const driverId = req.user.id; // Assuming `req.user` is populated by middleware
-        const driver = await Driver.findById(driverId);
+        const { litersCollected, litersDelivered, truckRegistration } = req.body;
 
-        // Verify driver existence and role
-        if (!driver || driver.role !== 'driver') {
-            return res.status(403).json({ success: false, message: 'Access denied' });
+        // Validate required fields
+        if (!litersCollected || !litersDelivered || !truckRegistration) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required: litersCollected, litersDelivered, truckRegistration",
+            });
         }
+
+        const driverId = req.user.id; // Assuming `req.user` is set via authentication middleware
+        const driver = await Driver.findById(driverId);
+        if (!driver) {
+            return res.status(404).json({ success: false, message: "Driver not found" });
+        }
+        verifyDriverRole(driver);
 
         // Log the trip
         const tripLog = {
@@ -30,87 +36,90 @@ exports.logTrip = async (req, res) => {
             timestamp: new Date(),
         };
 
-        // Ensure trips array exists and log the trip
         driver.trips = driver.trips || [];
         driver.trips.push(tripLog);
         await driver.save();
 
+        logger.info(`✅ Trip logged for driver ${driverId}: ${litersCollected} liters collected and ${litersDelivered} delivered.`);
         res.status(201).json({
             success: true,
-            message: 'Trip logged successfully',
+            message: "Trip logged successfully",
             trip: tripLog,
         });
     } catch (error) {
-        console.error('Error logging trip:', error);
+        logger.error(`❌ Error logging trip: ${error.message}`);
         res.status(500).json({
             success: false,
-            message: 'Error logging trip',
+            message: "Error logging trip",
             error: error.message,
         });
     }
 };
 
 // Track stock on hand
-exports.getStockOnHand = async (req, res) => {
+export const getStockOnHand = async (req, res) => {
     try {
-        const driverId = req.user.id; // Assuming `req.user` is populated by middleware
+        const driverId = req.user.id;
         const driver = await Driver.findById(driverId);
+        if (!driver) {
+            return res.status(404).json({ success: false, message: "Driver not found" });
+        }
+        verifyDriverRole(driver);
 
-        // Verify driver existence and role
-        if (!driver || driver.role !== 'driver') {
-            return res.status(403).json({ success: false, message: 'Access denied' });
+        const stockOnHand = driver.stockOnHand || 0;
+        if (isNaN(stockOnHand)) {
+            throw new Error("Invalid stock data");
         }
 
+        logger.info(`✅ Stock on hand for driver ${driverId}: ${stockOnHand}`);
         res.status(200).json({
             success: true,
-            message: 'Stock on hand retrieved successfully',
-            stockOnHand: driver.stockOnHand || 0, // Default to 0 if field is undefined
+            message: "Stock on hand retrieved successfully",
+            stockOnHand,
         });
     } catch (error) {
-        console.error('Error retrieving stock on hand:', error);
+        logger.error(`❌ Error retrieving stock on hand: ${error.message}`);
         res.status(500).json({
             success: false,
-            message: 'Error retrieving stock on hand',
+            message: "Error retrieving stock on hand",
             error: error.message,
         });
     }
 };
 
 // Update truck location
-exports.updateLocation = async (req, res) => {
-    const { latitude, longitude } = req.body;
-
-    // Validate required fields
-    if (!latitude || !longitude) {
-        return res.status(400).json({
-            success: false,
-            message: 'Latitude and longitude are required',
-        });
-    }
-
+export const updateLocation = async (req, res) => {
     try {
-        const driverId = req.user.id; // Assuming `req.user` is populated by middleware
-        const driver = await Driver.findById(driverId);
+        const { latitude, longitude } = req.body;
 
-        // Verify driver existence and role
-        if (!driver || driver.role !== 'driver') {
-            return res.status(403).json({ success: false, message: 'Access denied' });
+        if (latitude == null || longitude == null) {
+            return res.status(400).json({
+                success: false,
+                message: "Latitude and longitude are required",
+            });
         }
 
-        // Update driver location
+        const driverId = req.user.id;
+        const driver = await Driver.findById(driverId);
+        if (!driver) {
+            return res.status(404).json({ success: false, message: "Driver not found" });
+        }
+        verifyDriverRole(driver);
+
         driver.location = { latitude, longitude };
         await driver.save();
 
+        logger.info(`✅ Location updated for driver ${driverId}: ${latitude}, ${longitude}`);
         res.status(200).json({
             success: true,
-            message: 'Location updated successfully',
+            message: "Location updated successfully",
             location: driver.location,
         });
     } catch (error) {
-        console.error('Error updating location:', error);
+        logger.error(`❌ Error updating location: ${error.message}`);
         res.status(500).json({
             success: false,
-            message: 'Error updating location',
+            message: "Error updating location",
             error: error.message,
         });
     }

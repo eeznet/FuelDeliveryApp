@@ -1,55 +1,71 @@
-const jwt = require('jsonwebtoken');
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import logger from "../config/logger.js";
+import User from "../models/user.js";
 
-// Middleware to handle token verification and role-based access control
-const authMiddleware = (roles = []) => {
-  return async (req, res, next) => {
-    // Check for token in the Authorization header
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'No token, authorization denied',
-      });
-    }
-
+export const auth = async (req, res, next) => {
     try {
-      // Verify the token and decode the payload
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decoded; // Attach decoded user data to the request object
+        const token = req.header('Authorization')?.replace('Bearer ', '');
+        
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized'
+            });
+        }
 
-      // If roles are specified, check for role-based access control
-      if (roles.length > 0 && !roles.includes(req.user.role)) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access forbidden: insufficient role',
-          requiredRoles: roles,
-          userRole: req.user.role,
-        });
-      }
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'test-secret');
+            const user = await User.findById(decoded.id);
 
-      next(); // Proceed to the next middleware or route handler
+            if (!user) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Unauthorized'
+                });
+            }
+
+            if (!user.isActive) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Account disabled'
+                });
+            }
+
+            req.user = user;
+            next();
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Token has expired'
+                });
+            }
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized'
+            });
+        }
     } catch (error) {
-      console.error('Error in authMiddleware:', error);
-
-      // Differentiating the error types
-      if (error.name === 'JsonWebTokenError') {
+        logger.error(`Auth middleware error: ${error.message}`);
         return res.status(401).json({
-          success: false,
-          message: 'Invalid token',
+            success: false,
+            message: 'Unauthorized'
         });
-      } else if (error.name === 'TokenExpiredError') {
-        return res.status(401).json({
-          success: false,
-          message: 'Token has expired',
-        });
-      } else {
-        return res.status(500).json({
-          success: false,
-          message: 'Server error, unable to verify token',
-        });
-      }
     }
-  };
 };
 
-module.exports = authMiddleware;
+// Role-based middleware
+export const checkRole = (roles) => {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied'
+            });
+        }
+        next();
+    };
+};
+
+export default auth;

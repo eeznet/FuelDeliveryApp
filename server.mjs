@@ -62,6 +62,9 @@ const connectPostgres = async () => {
   }
 };
 
+// Add this before loadRoutes to debug
+console.log("Controllers directory:", fs.readdirSync(path.resolve(__dirname, './controllers')));
+
 // Dynamic imports for routes
 const loadRoutes = async () => {
   try {

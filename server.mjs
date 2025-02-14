@@ -68,7 +68,7 @@ const loadRoutes = async () => {
     // List files in the routes directory for debugging
     console.log(fs.readdirSync(path.resolve(__dirname, './routes')));
 
-    const authRoutes = (await import(path.resolve(__dirname, './routes/authRoutes.js'))).default;
+    const authRoutes = (await import(path.resolve(__dirname, './routes/authroutes.js'))).default;
     const userRoutes = (await import(path.resolve(__dirname, './routes/userRoutes.js'))).default;
     const invoiceRoutes = (await import(path.resolve(__dirname, './routes/invoiceRoutes.js'))).default;
 

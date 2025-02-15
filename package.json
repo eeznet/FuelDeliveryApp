@@ -11,5 +11,10 @@
     "build:server": "if not exist dist mkdir dist && xcopy /E /I routes dist\\routes && xcopy /E /I controllers dist\\controllers && xcopy /E /I config dist\\config && xcopy /E /I middleware dist\\middleware && xcopy /E /I models dist\\models && copy server.mjs dist\\ && copy package.json dist\\ && copy .env.production dist\\.env",
     "build:client": "cd frontend && npm install && npm run build",
     "test": "jest"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.0",
+    "dotenv": "^16.4.7",
+    "pg": "^8.13.3"
   }
 }

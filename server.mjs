@@ -38,22 +38,20 @@ const app = express();
 // Middleware
 app.use(bodyParser.json());
 app.use(express.static('public'));
-app.use(corsMiddleware);
 
-// Handle preflight requests
-app.options('*', corsMiddleware);
-
-// Update the CORS middleware section
+// Remove the duplicate CORS middleware and update it
 app.use((req, res, next) => {
+    // Allow specific origin
     res.header('Access-Control-Allow-Origin', 'https://fueldeliveryapp-1.onrender.com');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
+
+    // Handle preflight
     if (req.method === 'OPTIONS') {
-        res.sendStatus(200);
-    } else {
-        next();
+        return res.status(200).end();
     }
+    next();
 });
 
 // PostgreSQL Connection Pool (uses DB_PORT if defined, otherwise defaults to 5432)

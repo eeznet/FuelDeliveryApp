@@ -4,7 +4,8 @@ const api = axios.create({
     baseURL: 'https://fuel-delivery-backend.onrender.com/api',
     headers: {
         'Content-Type': 'application/json'
-    }
+    },
+    withCredentials: true
 });
 
 // Add token to requests
@@ -20,7 +21,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     response => response,
     error => {
-        console.error('API Error:', error.response?.data || error.message);
+        console.error('API Error:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        });
         return Promise.reject(error);
     }
 );

@@ -32,23 +32,16 @@ async function initializeUsers() {
             );
         `);
 
-        // Create owner
-        const ownerPassword = await bcrypt.hash('owner123', 10);
-        await client.query(`
-            INSERT INTO users (name, email, password, role, is_active)
-            VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT (email) DO NOTHING
-        `, ['System Owner', 'eeznetsolutions@gmail.com', ownerPassword, 'owner', true]);
-
-        // Create admin
+        // Create admin only (owner will be added later)
         const adminPassword = await bcrypt.hash('admin123', 10);
         await client.query(`
             INSERT INTO users (name, email, password, role, is_active)
             VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT (email) DO NOTHING
-        `, ['System Admin', 'admin@example.com', adminPassword, 'admin', true]);
+            ON CONFLICT (email) DO UPDATE 
+            SET password = $3, role = $4, is_active = $5
+        `, ['Admin User', 'eeznetsolutions@gmail.com', adminPassword, 'admin', true]);
 
-        console.log('✅ Owner and admin users created successfully');
+        console.log('✅ Admin user created successfully');
 
         // Verify users were created
         const result = await client.query('SELECT email, role FROM users');

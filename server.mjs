@@ -39,19 +39,39 @@ const app = express();
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Remove the duplicate CORS middleware and update it
+// Consolidate all CORS configuration in one place at the top of middleware section
 app.use((req, res, next) => {
-    // Allow specific origin
-    res.header('Access-Control-Allow-Origin', 'https://fueldeliveryapp-1.onrender.com');
+    // Specific allowed origin
+    const allowedOrigin = 'https://fueldeliveryapp-1.onrender.com';
+    
+    // Set CORS headers
+    res.header('Access-Control-Allow-Origin', allowedOrigin);
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
 
     // Handle preflight
     if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+        return res.status(204).end();
     }
+
+    // Log request for debugging
+    console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+    
     next();
+});
+
+// Add this after CORS middleware and before other routes
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        cors: {
+            origin: req.headers.origin,
+            method: req.method
+        }
+    });
 });
 
 // PostgreSQL Connection Pool (uses DB_PORT if defined, otherwise defaults to 5432)
@@ -109,6 +129,20 @@ const loadRoutes = async () => {
 // Add this after other route middleware
 app.use('/api', apiRoutes);
 app.use('/api/invoice', invoiceRoutes);
+
+// Add error logging middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', {
+        path: req.path,
+        method: req.method,
+        error: err.message
+    });
+    res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: err.message
+    });
+});
 
 // Initialize app
 const initializeApp = async () => {

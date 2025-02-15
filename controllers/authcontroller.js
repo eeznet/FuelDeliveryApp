@@ -48,45 +48,45 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Find user
+    // Add detailed logging
+    console.log('Login attempt:', { email });
+    
     const result = await client.query(
       'SELECT * FROM users WHERE email = $1',
       [email]
     );
     
+    if (result.rows.length === 0) {
+      console.log('User not found:', email);
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+    
     const user = result.rows[0];
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
-    
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
+    
     if (!isMatch) {
+      console.log('Password mismatch for:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
     
-    // Check if user is active
-    if (!user.is_active) {
-      return res.status(403).json({
-        success: false,
-        message: 'Account is disabled'
-      });
-    }
-    
-    // Generate token
+    // Generate token with role
     const token = jwt.sign(
-      { id: user.id, role: user.role },
+      { 
+        id: user.id, 
+        role: user.role,
+        email: user.email 
+      },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
     
-    logger.info(`User logged in successfully: ${email}`);
+    console.log('Login successful:', { email, role: user.role });
     
     res.json({
       success: true,
@@ -100,10 +100,11 @@ export const login = async (req, res) => {
       }
     });
   } catch (error) {
-    logger.error(`Login error: ${error.message}`);
+    console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Login failed'
+      message: 'Login failed',
+      error: error.message
     });
   } finally {
     client.release();

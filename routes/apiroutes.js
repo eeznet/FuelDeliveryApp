@@ -127,4 +127,16 @@ router.put('/deliveries/:id/status', auth, checkRole(['driver']), async (req, re
     }
 });
 
+// Health Check Route
+router.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        cors: {
+            origin: req.headers.origin,
+            method: req.method
+        }
+    });
+});
+
 export default router;

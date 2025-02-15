@@ -8,7 +8,7 @@
     "dev:client": "cd frontend && npm start",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "build": "npm run build:server && npm run build:client",
-    "build:server": "mkdir -p dist && cp -r routes controllers config middleware models server.mjs package.json .env.production dist/.env",
+    "build:server": "if not exist dist mkdir dist && xcopy /E /I routes dist\\routes && xcopy /E /I controllers dist\\controllers && xcopy /E /I config dist\\config && xcopy /E /I middleware dist\\middleware && xcopy /E /I models dist\\models && copy server.mjs dist\\ && copy package.json dist\\ && copy .env.production dist\\.env",
     "build:client": "cd frontend && npm install && npm run build",
     "test": "jest"
   }

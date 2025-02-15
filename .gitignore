@@ -37,3 +37,7 @@ coverage/
 .docker/
 
 # Other environment-specific folders
+
+# Download a simple placeholder logo
+curl https://via.placeholder.com/192 > frontend/public/logo192.png
+curl https://via.placeholder.com/512 > frontend/public/logo512.png

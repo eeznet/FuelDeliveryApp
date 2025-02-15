@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 import logger from "./config/logger.js";
 import fs from 'fs';
 import apiRoutes from './routes/apiRoutes.js';
-import cors from 'cors';
+import corsMiddleware from './config/corsMiddleware.js';
 import invoiceRoutes from './routes/invoiceRoutes.js';
 
 const { Pool } = pg;
@@ -38,14 +38,21 @@ const app = express();
 // Middleware
 app.use(bodyParser.json());
 app.use(express.static('public'));
+app.use(corsMiddleware);
 
-// Add this after other middleware
-app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? 'https://fueldeliverywebapp.onrender.com' 
-        : 'http://localhost:3001',
-    credentials: true
-}));
+// Handle preflight requests
+app.options('*', corsMiddleware);
+
+// Update the CORS middleware section
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 // PostgreSQL Connection Pool (uses DB_PORT if defined, otherwise defaults to 5432)
 const pool = new Pool({

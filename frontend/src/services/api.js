@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL
+    baseURL: process.env.REACT_APP_API_URL || 'https://fuel-delivery-backend.onrender.com/api'
 });
 
 // Add token to requests
@@ -12,6 +12,15 @@ api.interceptors.request.use((config) => {
     }
     return config;
 });
+
+// Add response interceptor for error handling
+api.interceptors.response.use(
+    response => response,
+    error => {
+        console.error('API Error:', error.response?.data || error.message);
+        return Promise.reject(error);
+    }
+);
 
 export const auth = {
     login: (credentials) => api.post('/auth/login', credentials),

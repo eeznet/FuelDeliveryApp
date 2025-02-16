@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import pool from "../config/database.js";
-import logger from "../config/logger.js";
 
 // Register user
 export const register = async (req, res) => {
@@ -78,13 +77,12 @@ export const login = async (req, res) => {
 // Logout user
 export const logout = (req, res) => {
   try {
-    // Since we're using JWT, we just need to tell the client to remove the token
     res.json({
       success: true,
       message: 'Logout successful'
     });
   } catch (error) {
-    logger.error(`Logout error: ${error.message}`);
+    console.error('Logout error:', error);
     res.status(500).json({
       success: false,
       message: 'Logout failed'

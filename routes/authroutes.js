@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import { register, login, logout } from '../controllers/authController.js';
 import pool from '../config/database.js';
 import logger from '../config/logger.js';
+import { auth } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -51,6 +52,6 @@ const validateLogin = [
 // Routes
 router.post('/register', validateRegistration, register);
 router.post('/login', validateLogin, login);
-router.post('/logout', logout);
+router.post('/logout', auth, logout);
 
 export default router;

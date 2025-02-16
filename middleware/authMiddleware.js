@@ -7,42 +7,27 @@ export const auth = async (req, res, next) => {
         const token = req.header('Authorization')?.replace('Bearer ', '');
         
         if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: 'No token provided'
+            return res.status(401).json({ 
+                success: false, 
+                message: 'No authentication token' 
             });
         }
-        
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
         
-        // Get user from database
-        const result = await pool.query(
-            'SELECT id, name, email, role, is_active FROM users WHERE id = $1',
-            [decoded.id]
-        );
-        
-        const user = result.rows[0];
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'User not found'
-            });
+        if (result.rows.length === 0) {
+            throw new Error();
         }
-        
-        if (!user.is_active) {
-            return res.status(403).json({
-                success: false,
-                message: 'Account is disabled'
-            });
-        }
-        
-        req.user = user;
+
+        req.token = token;
+        req.user = result.rows[0];
         next();
     } catch (error) {
         logger.error(`Auth middleware error: ${error.message}`);
-        res.status(401).json({
-            success: false,
-            message: 'Authentication failed'
+        res.status(401).json({ 
+            success: false, 
+            message: 'Please authenticate' 
         });
     }
 };

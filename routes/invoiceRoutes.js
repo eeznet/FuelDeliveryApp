@@ -124,4 +124,17 @@ router.get('/client', auth, checkRole(['client']), async (req, res) => {
     }
 });
 
+// Basic invoice route
+router.get('/', auth, async (req, res) => {
+    try {
+        res.json({
+            success: true,
+            message: 'Invoice route working'
+        });
+    } catch (error) {
+        console.error('Invoice route error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 export default router; 

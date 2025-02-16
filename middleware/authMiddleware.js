@@ -1,6 +1,5 @@
-import jwt from "jsonwebtoken";
-import pool from "../config/database.js";
-import logger from "../config/logger.js";
+import jwt from 'jsonwebtoken';
+import pool from '../config/database.js';
 
 export const auth = async (req, res, next) => {
     try {
@@ -24,7 +23,6 @@ export const auth = async (req, res, next) => {
         req.user = result.rows[0];
         next();
     } catch (error) {
-        logger.error(`Auth middleware error: ${error.message}`);
         res.status(401).json({ 
             success: false, 
             message: 'Please authenticate' 
@@ -32,7 +30,6 @@ export const auth = async (req, res, next) => {
     }
 };
 
-// Role-based middleware
 export const checkRole = (roles) => {
     return (req, res, next) => {
         if (!roles.includes(req.user.role)) {

@@ -1,11 +1,11 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
 import logger from './logger.mjs';
-import { promises as fs } from 'fs';
 import bcrypt from 'bcryptjs';
 
-const { Pool } = pg;
 dotenv.config();
+
+const { Pool } = pg;
 
 const pool = new Pool({
     host: process.env.DB_HOST,
@@ -22,7 +22,7 @@ const pool = new Pool({
 const initializeDatabase = async () => {
     const client = await pool.connect();
     try {
-        // Create users table if it doesn't exist
+        // Create users table
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -33,9 +33,17 @@ const initializeDatabase = async () => {
                 is_active BOOLEAN DEFAULT true,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS invoices (
+                id SERIAL PRIMARY KEY,
+                client_id INTEGER REFERENCES users(id),
+                amount DECIMAL(10,2) NOT NULL,
+                status VARCHAR(50) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
 
-        // Create admin user if doesn't exist
+        // Create default admin user
         const hashedPassword = await bcrypt.hash('admin123', 10);
         await client.query(`
             INSERT INTO users (name, email, password, role)
@@ -43,7 +51,7 @@ const initializeDatabase = async () => {
             ON CONFLICT (email) DO NOTHING
         `, ['Admin User', 'eeznetsolutions@gmail.com', hashedPassword, 'admin']);
 
-        logger.info('✅ Database initialized successfully');
+        logger.info('✅ Database tables initialized successfully');
     } catch (error) {
         logger.error('❌ Database initialization failed:', error);
         throw error;
@@ -53,11 +61,12 @@ const initializeDatabase = async () => {
 };
 
 // Connection events
-pool.on('connect', () => {
-    logger.info('✅ PostgreSQL connected');
-    initializeDatabase().catch(err => {
-        logger.error('Failed to initialize database:', err);
-    });
+pool.on('connect', async () => {
+    try {
+        await initializeDatabase();
+    } catch (error) {
+        logger.error('Failed to initialize database:', error);
+    }
 });
 
 pool.on('error', (err) => {

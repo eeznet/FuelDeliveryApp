@@ -38,16 +38,36 @@ app.use((req, res, next) => {
     next();
 });
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI)
-.then(() => {
-    logger.info('✅ Connected to MongoDB');
-})
-.catch((err) => {
-    logger.error('❌ MongoDB connection error:', err.message);
-});
+// Database Connections
+const connectDatabases = async () => {
+    try {
+        // Connect to MongoDB
+        await mongoose.connect(process.env.MONGO_URI);
+        logger.info('✅ Connected to MongoDB');
 
-// Health check endpoint - update to include MongoDB status
+        // PostgreSQL connection is handled in database.mjs
+        // Wait for both connections
+        await Promise.all([
+            new Promise((resolve) => {
+                pool.on('connect', () => {
+                    logger.info('✅ Connected to PostgreSQL');
+                    resolve();
+                });
+            }),
+            mongoose.connection.asPromise()
+        ]);
+
+        logger.info('✅ All database connections established');
+    } catch (error) {
+        logger.error('❌ Database connection error:', error);
+        process.exit(1);
+    }
+};
+
+// Initialize databases
+connectDatabases();
+
+// Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'ok',
@@ -66,7 +86,7 @@ app.use('/api/invoice', invoiceRoutes);
 
 // Add a catch-all route for undefined routes
 app.use('*', (req, res) => {
-    console.log('404 - Route not found:', req.originalUrl);
+    logger.warn('404 - Route not found:', req.originalUrl);
     res.status(404).json({
         success: false,
         message: 'Route not found',
@@ -77,7 +97,7 @@ app.use('*', (req, res) => {
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    logger.info(`Server running on port ${PORT}`);
 });
 
 export { app, pool };

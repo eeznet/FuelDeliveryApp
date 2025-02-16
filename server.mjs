@@ -39,25 +39,16 @@ const app = express();
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Consolidate all CORS configuration in one place at the top of middleware section
+// Update CORS configuration
 app.use((req, res, next) => {
-    // Specific allowed origin
-    const allowedOrigin = 'https://fueldeliveryapp-1.onrender.com';
-    
-    // Set CORS headers
-    res.header('Access-Control-Allow-Origin', allowedOrigin);
+    res.header('Access-Control-Allow-Origin', 'https://fueldeliveryapp-1.onrender.com');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Allow-Credentials', 'true');
-
-    // Handle preflight
-    if (req.method === 'OPTIONS') {
-        return res.status(204).end();
-    }
-
-    // Log request for debugging
-    console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
     
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
     next();
 });
 

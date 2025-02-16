@@ -1,8 +1,10 @@
-const { Pool } = require('pg');
-const bcrypt = require('bcryptjs');
-const dotenv = require('dotenv');
+import pg from 'pg';
+import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
 
 dotenv.config();
+
+const { Pool } = pg;
 
 // Use production database credentials with full hostname
 const pool = new Pool({
@@ -32,7 +34,7 @@ async function initializeUsers() {
             );
         `);
 
-        // Create admin only (owner will be added later)
+        // Create admin user
         const adminPassword = await bcrypt.hash('admin123', 10);
         await client.query(`
             INSERT INTO users (name, email, password, role, is_active)
@@ -49,7 +51,7 @@ async function initializeUsers() {
 
         process.exit(0);
     } catch (error) {
-        console.error('❌ Error creating users:', error);
+        console.error('❌ Error:', error);
         process.exit(1);
     } finally {
         client.release();

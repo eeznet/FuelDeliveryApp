@@ -7,8 +7,8 @@ import { fileURLToPath } from "url";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
-import authRoutes from './routes/authRoutes.js';
-import invoiceRoutes from './routes/invoiceRoutes.js';
+import authRoutes from './routes/authRoutes.mjs';
+import invoiceRoutes from './routes/invoiceRoutes.mjs';
 
 const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);

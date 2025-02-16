@@ -1,6 +1,7 @@
 import express from 'express';
 import { auth, checkRole } from '../middleware/authMiddleware.mjs';
-import pool from '../config/database.js';
+import pool from '../config/database.mjs';
+import logger from '../config/logger.mjs';
 
 const router = express.Router();
 

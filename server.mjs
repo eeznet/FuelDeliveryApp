@@ -7,6 +7,8 @@ import { fileURLToPath } from "url";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import logger from './config/logger.mjs';
+import pool from './config/database.mjs';
 import authRoutes from './routes/authRoutes.mjs';
 import invoiceRoutes from './routes/invoiceRoutes.mjs';
 
@@ -47,30 +49,6 @@ mongoose.connect(process.env.MONGO_URI, {
 .catch((err) => {
     console.error('❌ MongoDB connection error:', err.message);
 });
-
-// Database connection
-const pool = new Pool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
-    ssl: {
-        rejectUnauthorized: false
-    },
-    connectionTimeoutMillis: 5000,
-    query_timeout: 10000
-});
-
-// Test database connection
-pool.connect()
-    .then(client => {
-        console.log('✅ Connected to PostgreSQL database');
-        client.release();
-    })
-    .catch(err => {
-        console.error('❌ Database connection error:', err.message);
-    });
 
 // Health check endpoint - update to include MongoDB status
 app.get('/api/health', (req, res) => {

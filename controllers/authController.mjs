@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import pool from "../config/database.js";
+import pool from "../config/database.mjs";
+import logger from "../config/logger.mjs";
 
 // Register user
 export const register = async (req, res) => {

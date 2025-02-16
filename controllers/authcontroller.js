@@ -5,88 +5,58 @@ import logger from "../config/logger.js";
 
 // Register user
 export const register = async (req, res) => {
-  const client = await pool.connect();
   try {
     const { name, email, password, role } = req.body;
     
+    // Check if user exists
+    const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ success: false, message: 'Email already registered' });
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // Insert user
-    const result = await client.query(
+    const result = await pool.query(
       'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role',
       [name, email, hashedPassword, role]
     );
     
-    const user = result.rows[0];
-    logger.info(`User registered successfully: ${email}`);
-    
     res.status(201).json({
       success: true,
       message: 'Registration successful',
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: result.rows[0]
     });
   } catch (error) {
-    logger.error(`Registration error: ${error.message}`);
-    res.status(500).json({
-      success: false,
-      message: 'Registration failed'
-    });
-  } finally {
-    client.release();
+    console.error('Registration error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
 // Login user
 export const login = async (req, res) => {
-  const client = await pool.connect();
   try {
     const { email, password } = req.body;
     
-    // Add detailed logging
-    console.log('Login attempt:', { email });
-    
-    const result = await client.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     
     if (result.rows.length === 0) {
-      console.log('User not found:', email);
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
     const user = result.rows[0];
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, user.password);
     
-    if (!isMatch) {
-      console.log('Password mismatch for:', email);
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+    if (!isValidPassword) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
-    // Generate token with role
     const token = jwt.sign(
-      { 
-        id: user.id, 
-        role: user.role,
-        email: user.email 
-      },
+      { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-    
-    console.log('Login successful:', { email, role: user.role });
     
     res.json({
       success: true,
@@ -101,13 +71,7 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Login failed',
-      error: error.message
-    });
-  } finally {
-    client.release();
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 

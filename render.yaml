@@ -15,8 +15,12 @@ services:
         value: vcDMwd55ajsFUnZqlPuItAm1k9bIn88N
       - key: DB_NAME
         value: fuel_delivery_db
-      - key: PORT
+      - key: DB_PORT
         value: 5432
+      - key: JWT_SECRET
+        value: your-secret-key-here
+      - key: MONGO_URI
+        value: mongodb+srv://eeznetsolutions:Yp3mmebgxnQHA6XG@fueldelapp.iaiqh.mongodb.net/fuelDeliveryApp?retryWrites=true&w=majority
 
   - type: pserv
     name: mysql

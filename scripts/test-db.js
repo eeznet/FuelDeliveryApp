@@ -1,25 +1,33 @@
-import pool from '../config/database.js';
-import logger from '../config/logger.js';
+import pg from 'pg';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const { Pool } = pg;
+
+const pool = new Pool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
+    ssl: {
+        rejectUnauthorized: false
+    }
+});
 
 async function testConnection() {
     try {
         const client = await pool.connect();
-        logger.info('Database connection successful');
+        console.log('✅ Database connection successful');
         
-        // Test queries
-        const userCount = await client.query('SELECT COUNT(*) FROM users');
-        logger.info(`Total users: ${userCount.rows[0].count}`);
-        
-        const invoiceCount = await client.query('SELECT COUNT(*) FROM invoices');
-        logger.info(`Total invoices: ${invoiceCount.rows[0].count}`);
-        
-        const currentPrice = await client.query('SELECT price_per_liter FROM fuel_prices ORDER BY created_at DESC LIMIT 1');
-        logger.info(`Current fuel price: $${currentPrice.rows[0]?.price_per_liter || 'Not set'}`);
+        const result = await client.query('SELECT NOW()');
+        console.log('✅ Query successful:', result.rows[0]);
         
         client.release();
         process.exit(0);
     } catch (error) {
-        logger.error('Database test failed:', error);
+        console.error('❌ Database connection failed:', error.message);
         process.exit(1);
     }
 }

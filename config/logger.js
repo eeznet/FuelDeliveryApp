@@ -1,4 +1,4 @@
-import winston from "winston";
+import { createLogger, format, transports } from 'winston';
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -20,26 +20,18 @@ if (!fs.existsSync(logDirectory)) {
 const logLevel = process.env.LOG_LEVEL || "info";
 
 // Define log format
-const logFormat = winston.format.combine(
-  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-  winston.format.printf(({ timestamp, level, message, ...metadata }) => {
-    let msg = `${timestamp} [${level.toUpperCase()}] (PID: ${process.pid}): ${message}`;
-    if (Object.keys(metadata).length) {
-      msg += ` | Metadata: ${JSON.stringify(metadata)}`;
-    }
-    return msg;
-  })
+const logFormat = format.combine(
+  format.timestamp(),
+  format.json()
 );
 
 // Create Winston logger instance
-const logger = winston.createLogger({
+const logger = createLogger({
   level: logLevel,
   format: logFormat,
   transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
-    }),
-  ],
+    new transports.Console()
+  ]
 });
 
 // Enable file logging except in Jest test environments
@@ -55,7 +47,7 @@ if (process.env.NODE_ENV !== "test") {
   );
 
   logger.add(
-    new winston.transports.File({
+    new transports.File({
       filename: path.join(logDirectory, "error.log"),
       level: "error",
     })

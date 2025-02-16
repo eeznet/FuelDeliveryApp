@@ -4,8 +4,6 @@ import pg from "pg";
 import bodyParser from "body-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-import mongoose from "mongoose";
-import logger from "./config/logger.js";
 
 const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
@@ -66,6 +64,7 @@ app.post('/api/auth/login', async (req, res) => {
             res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
     } catch (error) {
+        console.error('Login error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });

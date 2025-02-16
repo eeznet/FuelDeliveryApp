@@ -39,15 +39,12 @@ app.use((req, res, next) => {
 });
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+mongoose.connect(process.env.MONGO_URI)
 .then(() => {
-    console.log('✅ Connected to MongoDB');
+    logger.info('✅ Connected to MongoDB');
 })
 .catch((err) => {
-    console.error('❌ MongoDB connection error:', err.message);
+    logger.error('❌ MongoDB connection error:', err.message);
 });
 
 // Health check endpoint - update to include MongoDB status

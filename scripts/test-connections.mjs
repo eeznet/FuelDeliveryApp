@@ -1,8 +1,8 @@
-import pg from 'pg';
+import pkg from 'pg';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
-const { Pool } = pg;
+const { Pool } = pkg;
 dotenv.config();
 
 async function testConnections() {
@@ -23,21 +23,18 @@ async function testConnections() {
         const pgClient = await pool.connect();
         console.log('✅ PostgreSQL connected');
         const pgResult = await pgClient.query('SELECT NOW()');
-        console.log('✅ PostgreSQL query successful:', pgResult.rows[0]);
+        console.log('PostgreSQL time:', pgResult.rows[0].now);
         pgClient.release();
 
         // Test MongoDB
-        await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
+        await mongoose.connect(process.env.MONGO_URI);
         console.log('✅ MongoDB connected');
         
         // Close connections
         await pool.end();
         await mongoose.connection.close();
         
-        console.log('✅ All database connections tested successfully');
+        console.log('✅ All database connections successful');
         process.exit(0);
     } catch (error) {
         console.error('❌ Connection test failed:', error.message);
@@ -45,4 +42,5 @@ async function testConnections() {
     }
 }
 
+console.log('🚀 Testing database connections...');
 testConnections(); 

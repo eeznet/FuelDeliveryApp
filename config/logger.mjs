@@ -3,7 +3,7 @@ const { createLogger, format, transports } = winston;
 
 // Create the logger
 const logger = createLogger({
-    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+    level: 'info',
     format: format.combine(
         format.timestamp(),
         format.json()

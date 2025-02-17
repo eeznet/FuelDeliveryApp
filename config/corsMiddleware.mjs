@@ -1,6 +1,6 @@
 import cors from "cors";
 import dotenv from "dotenv";
-import logger from "./logger.js";
+import logger from "./logger.mjs";
 
 dotenv.config();
 

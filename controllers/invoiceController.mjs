@@ -1,5 +1,5 @@
-import Invoice from "../models/invoice.js";
-import User from "../models/user.js";
+import Invoice from "../models/invoice.mjs";
+import User from "../models/user.mjs";
 import logger from "../config/logger.js";
 
 // Create a New Invoice

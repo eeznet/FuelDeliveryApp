@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import pool from '../config/database.js';
+import pool from '../config/database.mjs';  // Note the .mjs extension
 
 export const auth = async (req, res, next) => {
     try {
@@ -42,4 +42,4 @@ export const checkRole = (roles) => {
     };
 };
 
-export default auth; 
+export default auth;

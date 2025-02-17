@@ -1,18 +1,16 @@
 import dotenv from "dotenv";
 import express from "express";
-import pg from "pg";
 import bodyParser from "body-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import logger from './config/logger.mjs';
 import pool from './config/database.mjs';
 import authRoutes from './routes/authRoutes.mjs';
 import invoiceRoutes from './routes/invoiceRoutes.mjs';
+import userRoutes from './routes/userRoutes.mjs';
+import corsMiddleware from './config/corsMiddleware.mjs';
 
-const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -22,19 +20,18 @@ dotenv.config();
 const app = express();
 
 // Middleware
+app.use(corsMiddleware);
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// CORS configuration
+// Debug middleware to log all requests
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*'); // Changed to allow all origins for testing
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+    logger.info('Incoming request:', {
+        method: req.method,
+        url: req.url,
+        path: req.path,
+        headers: req.headers
+    });
     next();
 });
 
@@ -45,17 +42,10 @@ const connectDatabases = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         logger.info('✅ Connected to MongoDB');
 
-        // PostgreSQL connection is handled in database.mjs
-        // Wait for both connections
-        await Promise.all([
-            new Promise((resolve) => {
-                pool.on('connect', () => {
-                    logger.info('✅ Connected to PostgreSQL');
-                    resolve();
-                });
-            }),
-            mongoose.connection.asPromise()
-        ]);
+        // Test PostgreSQL connection
+        const client = await pool.connect();
+        logger.info('✅ Connected to PostgreSQL');
+        client.release();
 
         logger.info('✅ All database connections established');
     } catch (error) {
@@ -80,13 +70,38 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/invoice', invoiceRoutes);
+// Routes with logging
+logger.info('Setting up routes...');
 
-// Add a catch-all route for undefined routes
+app.use('/api/auth', (req, res, next) => {
+    logger.info('Auth route hit');
+    authRoutes(req, res, next);
+});
+
+app.use('/api/invoice', (req, res, next) => {
+    logger.info('Invoice route hit');
+    invoiceRoutes(req, res, next);
+});
+
+app.use('/api/user', (req, res, next) => {
+    logger.info('User route hit');
+    userRoutes(req, res, next);
+});
+
+// Debug middleware to catch unmatched routes
 app.use('*', (req, res) => {
-    logger.warn('404 - Route not found:', req.originalUrl);
+    logger.warn('404 - Route not found:', {
+        method: req.method,
+        url: req.originalUrl,
+        path: req.path,
+        baseUrl: req.baseUrl,
+        routes: app._router.stack
+            .filter(r => r.route || r.handle)
+            .map(r => ({
+                path: r.route?.path || r.regexp,
+                methods: r.route ? Object.keys(r.route.methods) : 'middleware'
+            }))
+    });
     res.status(404).json({
         success: false,
         message: 'Route not found',

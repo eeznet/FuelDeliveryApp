@@ -1,5 +1,5 @@
 // controllers/userController.js
-import User from "../models/user.js";
+import User from "../models/user.mjs";
 
 // Get user profile (based on ID)
 export const getUserProfile = async (req, res) => {

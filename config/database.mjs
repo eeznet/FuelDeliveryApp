@@ -22,7 +22,7 @@ const pool = new Pool({
 const initializeDatabase = async () => {
     const client = await pool.connect();
     try {
-        // Create users table
+        // Create tables
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -37,13 +37,34 @@ const initializeDatabase = async () => {
             CREATE TABLE IF NOT EXISTS invoices (
                 id SERIAL PRIMARY KEY,
                 client_id INTEGER REFERENCES users(id),
-                amount DECIMAL(10,2) NOT NULL,
+                driver_id INTEGER REFERENCES users(id),
+                liters_delivered DECIMAL(10,2) NOT NULL,
+                price_per_liter DECIMAL(10,2) NOT NULL,
+                total_price DECIMAL(10,2) NOT NULL,
                 status VARCHAR(50) DEFAULT 'pending',
+                address TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS deliveries (
+                id SERIAL PRIMARY KEY,
+                invoice_id INTEGER REFERENCES invoices(id),
+                driver_id INTEGER REFERENCES users(id),
+                status VARCHAR(50) DEFAULT 'pending',
+                started_at TIMESTAMP,
+                completed_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS fuel_prices (
+                id SERIAL PRIMARY KEY,
+                price_per_liter DECIMAL(10,2) NOT NULL,
+                created_by INTEGER REFERENCES users(id),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
 
-        // Create default admin user
+        // Create default admin user if doesn't exist
         const hashedPassword = await bcrypt.hash('admin123', 10);
         await client.query(`
             INSERT INTO users (name, email, password, role)

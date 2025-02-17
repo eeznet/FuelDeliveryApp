@@ -4,7 +4,10 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: npm install
+    buildCommand: |
+      npm install
+      ls -la routes/
+      ls -la controllers/
     startCommand: node server.mjs
     envVars:
       - key: NODE_ENV

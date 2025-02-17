@@ -73,19 +73,24 @@ app.get('/api/health', (req, res) => {
 // Routes with logging
 logger.info('Setting up routes...');
 
-app.use('/api/auth', (req, res, next) => {
-    logger.info('Auth route hit');
-    authRoutes(req, res, next);
-});
+// Mount routes directly
+app.use('/api/auth', authRoutes);
+app.use('/api/invoice', invoiceRoutes);
+app.use('/api/user', userRoutes);
 
-app.use('/api/invoice', (req, res, next) => {
-    logger.info('Invoice route hit');
-    invoiceRoutes(req, res, next);
-});
-
-app.use('/api/user', (req, res, next) => {
-    logger.info('User route hit');
-    userRoutes(req, res, next);
+// Add route debugging
+app.use((req, res, next) => {
+    logger.info('Route not matched:', {
+        method: req.method,
+        url: req.url,
+        availableRoutes: app._router.stack
+            .filter(r => r.route)
+            .map(r => ({
+                path: r.route.path,
+                methods: Object.keys(r.route.methods)
+            }))
+    });
+    next();
 });
 
 // Debug middleware to catch unmatched routes

@@ -1,8 +1,9 @@
 import winston from 'winston';
 const { createLogger, format, transports } = winston;
 
+// Create the logger
 const logger = createLogger({
-    level: 'info',
+    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
     format: format.combine(
         format.timestamp(),
         format.json()
@@ -15,6 +16,16 @@ const logger = createLogger({
             )
         })
     ]
+});
+
+// Handle uncaught exceptions
+logger.exceptions.handle(
+    new transports.File({ filename: 'logs/exceptions.log' })
+);
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (error) => {
+    logger.error('Unhandled Rejection:', error);
 });
 
 export default logger; 

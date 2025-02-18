@@ -8,6 +8,8 @@ services:
       npm install
       npm run build
     staticPublishPath: frontend/dist
+    branch: main
+    autoDeploy: true
     routes:
       - type: rewrite
         source: /*

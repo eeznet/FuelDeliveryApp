@@ -6,11 +6,9 @@ import { fileURLToPath } from "url";
 import mongoose from 'mongoose';
 import logger from './config/logger.mjs';
 import pool from './config/database.mjs';
-import { initializeWebSocket } from './config/websocket.mjs';
 import authRoutes from './routes/authRoutes.mjs';
 import invoiceRoutes from './routes/invoiceRoutes.mjs';
 import userRoutes from './routes/userRoutes.mjs';
-import chatRoutes from './routes/chatRoutes.mjs';
 import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -95,7 +93,6 @@ logger.info('Setting up routes...');
 app.use('/api/auth', authRoutes);
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/user', userRoutes);
-app.use('/api/chat', chatRoutes);
 
 // Add route debugging
 app.use((req, res, next) => {
@@ -138,16 +135,6 @@ if (process.env.NODE_ENV !== 'test') {
     const PORT = process.env.PORT || 3000;
     server = app.listen(PORT, () => {
         logger.info(`Server running on port ${PORT}`);
-    });
-    
-    // Initialize WebSocket
-    const io = initializeWebSocket(server);
-    global.io = io;
-
-    // Add io to request object
-    app.use((req, res, next) => {
-        req.io = io;
-        next();
     });
 }
 

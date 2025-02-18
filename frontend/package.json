@@ -2,10 +2,11 @@
   "name": "fuel-delivery-frontend",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "build": "vite build --emptyOutDir",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {

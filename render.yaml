@@ -2,8 +2,12 @@ services:
   - type: web
     name: fueldeliveryapp-1
     env: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: ./dist
+    buildCommand: |
+      cd frontend
+      rm -rf node_modules package-lock.json
+      npm install
+      npm run build
+    staticPublishPath: frontend/dist
     routes:
       - type: rewrite
         source: /*

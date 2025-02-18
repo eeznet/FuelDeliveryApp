@@ -10,8 +10,7 @@
     "test:coverage": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "predeploy": "node scripts/test-deployment.js",
     "deploy": "git push render main",
-    "prebuild": "if not exist frontend\\public mkdir frontend\\public && if not exist public mkdir public",
-    "build": "cd frontend && npm install && npm run build",
+    "build": "cd frontend && npm install && vite build",
     "postbuild": "xcopy /E /I frontend\\dist public"
   },
   "dependencies": {

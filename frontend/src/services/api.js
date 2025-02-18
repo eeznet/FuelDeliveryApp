@@ -8,24 +8,17 @@ const api = axios.create({
     withCredentials: true
 });
 
-// Add request interceptor for debugging
+// Update interceptor to always include credentials
 api.interceptors.request.use(
     (config) => {
-        console.log('Making request:', {
-            url: config.url,
-            method: config.method,
-            headers: config.headers
-        });
+        config.withCredentials = true;
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => {
-        console.error('Request error:', error);
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
 // Add response interceptor for debugging

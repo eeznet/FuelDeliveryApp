@@ -27,12 +27,19 @@ const corsOptions = {
         : ['http://localhost:3000', 'http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    credentials: true,
+    exposedHeaders: ['set-cookie']
 };
 
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(express.static('public'));
+
+// Add before routes
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Credentials', 'true');
+    next();
+});
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {

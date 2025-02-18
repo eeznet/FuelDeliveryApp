@@ -71,6 +71,7 @@ connectDatabases();
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+    logger.info('Health check requested');
     res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
@@ -80,6 +81,11 @@ app.get('/api/health', (req, res) => {
             mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
         }
     });
+});
+
+// Add a root endpoint for basic connectivity test
+app.get('/', (req, res) => {
+    res.json({ message: 'Fuel Delivery API is running' });
 });
 
 // Routes with logging

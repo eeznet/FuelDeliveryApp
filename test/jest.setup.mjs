@@ -13,12 +13,22 @@ jest.mock('socket.io', () => {
     const mockOn = jest.fn();
     const mockEmit = jest.fn();
     const mockTo = jest.fn(() => ({ emit: mockEmit }));
+    const mockJoin = jest.fn();
+    const mockLeave = jest.fn();
 
     return {
         Server: jest.fn(() => ({
             on: mockOn,
             emit: mockEmit,
-            to: mockTo
+            to: mockTo,
+            join: mockJoin,
+            leave: mockLeave,
+            use: jest.fn((fn) => fn({
+                handshake: { auth: { token: 'mock-token' } },
+                on: mockOn,
+                join: mockJoin,
+                leave: mockLeave
+            }, jest.fn()))
         }))
     };
 });

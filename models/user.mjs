@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema(
         email: {
             type: String,
             required: true,
-            unique: true, // Ensures no duplicate emails
+            unique: true, // This creates an index
             lowercase: true,
             trim: true,
             match: [
@@ -40,33 +40,32 @@ const userSchema = new mongoose.Schema(
         isActive: {
             type: Boolean,
             default: true  // Set default to true
+        },
+        avatar: {
+            type: String,
+            default: null
+        },
+        isOnline: {
+            type: Boolean,
+            default: false
         }
     },
     { timestamps: true }
 );
 
 // Indexing for performance (especially for queries with email and role)
-userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 
 // Pre-save middleware to hash password
 userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
+    if (this.isModified('password')) {
+        this.password = await bcrypt.hash(this.password, 10);
     }
+    next();
 });
 
 // Check password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
-    if (!this.password) {
-        throw new Error('Password not found');
-    }
     return bcrypt.compare(candidatePassword, this.password);
 };
 
@@ -75,7 +74,7 @@ userSchema.methods.generateToken = function() {
     const secret = process.env.JWT_SECRET || 'test-secret';
     return jwt.sign(
         { 
-            id: this._id,
+            id: this._id.toString(),
             email: this.email,
             role: this.role 
         },

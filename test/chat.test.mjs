@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { app, server } from '../server.mjs';
-import Chat from '../models/chat.js';
+import Chat from '../models/chat.mjs';
 import { createTestUser, loginTestUser } from './test-utils.mjs';
 
 describe('Chat API Endpoints', () => {

@@ -5,7 +5,7 @@ import {
     getChatHistory,
     sendMessage,
     markAsRead
-} from '../controllers/chatController.js';
+} from '../controllers/chatController.mjs';
 
 const router = express.Router();
 

@@ -13,10 +13,19 @@ export const useWebSocket = () => {
         socketRef.current = io(import.meta.env.VITE_API_URL, {
             auth: {
                 token
-            }
+            },
+            transports: ['websocket'],
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            reconnectionAttempts: 5
         });
 
         // Connection error handling
+        socketRef.current.on('connect', () => {
+            console.log('WebSocket connected');
+        });
+
         socketRef.current.on('connect_error', (error) => {
             console.error('WebSocket connection error:', error);
         });

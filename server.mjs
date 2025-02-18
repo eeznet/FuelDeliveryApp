@@ -6,10 +6,12 @@ import { fileURLToPath } from "url";
 import mongoose from 'mongoose';
 import logger from './config/logger.mjs';
 import pool from './config/database.mjs';
+import { initializeWebSocket } from './config/websocket.mjs';
 import authRoutes from './routes/authRoutes.mjs';
 import invoiceRoutes from './routes/invoiceRoutes.mjs';
 import userRoutes from './routes/userRoutes.mjs';
-import corsMiddleware from './config/corsMiddleware.mjs';
+import chatRoutes from './routes/chatRoutes.mjs';
+import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,9 +20,19 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 
 const app = express();
+let server;
 
-// Middleware
-app.use(corsMiddleware);
+// CORS Configuration
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production' 
+        ? ['https://fueldeliveryapp-1.onrender.com'] 
+        : ['http://localhost:3000', 'http://localhost:5173'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
@@ -77,6 +89,7 @@ logger.info('Setting up routes...');
 app.use('/api/auth', authRoutes);
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Add route debugging
 app.use((req, res, next) => {
@@ -114,10 +127,22 @@ app.use('*', (req, res) => {
     });
 });
 
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    logger.info(`Server running on port ${PORT}`);
-});
+// Start server only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+    const PORT = process.env.PORT || 3000;
+    server = app.listen(PORT, () => {
+        logger.info(`Server running on port ${PORT}`);
+    });
+    
+    // Initialize WebSocket
+    const io = initializeWebSocket(server);
+    global.io = io;
 
-export { app, pool };
+    // Add io to request object
+    app.use((req, res, next) => {
+        req.io = io;
+        next();
+    });
+}
+
+export { app, pool, server };

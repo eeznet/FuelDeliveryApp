@@ -1,13 +1,10 @@
 services:
   - type: web
-    name: fueldeliverywebapp
+    name: fuel-delivery-backend
     env: node
     region: oregon
     plan: free
-    buildCommand: |
-      npm install
-      ls -la routes/
-      ls -la controllers/
+    buildCommand: npm install
     startCommand: node server.mjs
     envVars:
       - key: NODE_ENV
@@ -28,6 +25,10 @@ services:
         value: your-secret-key-here
       - key: MONGO_URI
         value: mongodb+srv://eeznetsolutions:Yp3mmebgxnQHA6XG@fueldelapp.iaiqh.mongodb.net/fuelDeliveryApp?retryWrites=true&w=majority
+      - key: POSTGRES_URL
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
     healthCheckPath: /api/health
     autoDeploy: true
 

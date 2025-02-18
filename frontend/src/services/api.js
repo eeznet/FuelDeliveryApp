@@ -9,7 +9,8 @@ const api = axios.create({
     withCredentials: true
 });
 
-// Add request interceptor for debugging
+// Remove duplicate interceptor - we have two identical ones
+// Keep only one request interceptor
 api.interceptors.request.use(
     (config) => {
         console.log('Making request:', config);
@@ -24,19 +25,6 @@ api.interceptors.request.use(
         console.error('Request error:', error);
         return Promise.reject(error);
     }
-);
-
-// Make sure the interceptor is properly configured
-api.interceptors.request.use(
-    (config) => {
-        config.withCredentials = true;
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
 );
 
 // Add response interceptor for debugging

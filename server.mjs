@@ -69,16 +69,7 @@ connectDatabases();
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    logger.info('Health check requested');
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV,
-        databases: {
-            postgres: pool.totalCount > 0 ? 'connected' : 'disconnected',
-            mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-        }
-    });
+    res.status(200).json({ status: 'ok', environment: process.env.NODE_ENV });
 });
 
 // Add a root endpoint for basic connectivity test

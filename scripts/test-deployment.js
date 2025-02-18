@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { fileURLToPath } from 'url';
 import logger from '../config/logger.mjs';
 
 const BASE_URL = process.env.NODE_ENV === 'production' 
@@ -35,7 +36,7 @@ async function testDeployment() {
 }
 
 // Run the test if this file is executed directly
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (import.meta.url === fileURLToPath(import.meta.url)) {
     testDeployment()
         .then(success => process.exit(success ? 0 : 1))
         .catch(error => {

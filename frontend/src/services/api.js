@@ -1,14 +1,32 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+    baseURL: 'https://fuel-delivery-backend.onrender.com/api',
     headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
     },
     withCredentials: true
 });
 
-// Update interceptor to always include credentials
+// Add request interceptor for debugging
+api.interceptors.request.use(
+    (config) => {
+        console.log('Making request:', config);
+        config.withCredentials = true;
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        console.error('Request error:', error);
+        return Promise.reject(error);
+    }
+);
+
+// Make sure the interceptor is properly configured
 api.interceptors.request.use(
     (config) => {
         config.withCredentials = true;

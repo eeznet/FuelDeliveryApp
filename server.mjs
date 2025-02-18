@@ -20,9 +20,13 @@ dotenv.config();
 const app = express();
 let server;
 
-// CORS Configuration
+// Update CORS Configuration
 const corsOptions = {
-    origin: ['https://fueldeliveryapp-1.onrender.com', 'http://localhost:5173'],
+    origin: [
+        'https://fueldeliveryapp-1.onrender.com',
+        'https://fuel-delivery-backend.onrender.com',
+        'http://localhost:5173'
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -30,6 +34,7 @@ const corsOptions = {
     optionsSuccessStatus: 204
 };
 
+// Make sure this is before any routes
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(express.static('public'));
@@ -52,6 +57,15 @@ app.use((req, res, next) => {
         path: req.path,
         headers: req.headers
     });
+    next();
+});
+
+// Add security headers middleware
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     next();
 });
 
@@ -79,7 +93,11 @@ connectDatabases();
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'ok', environment: process.env.NODE_ENV });
+    res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV
+    });
 });
 
 // Add a root endpoint for basic connectivity test

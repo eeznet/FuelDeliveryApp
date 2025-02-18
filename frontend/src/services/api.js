@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://fuel-delivery-backend.onrender.com/api',
+    baseURL: import.meta.env.VITE_API_URL || 'https://fuel-delivery-backend.onrender.com/api',
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -27,16 +27,10 @@ api.interceptors.request.use(
     }
 );
 
-// Add response interceptor for debugging
+// Improve error handling
 api.interceptors.response.use(
-    (response) => {
-        console.log('Response received:', {
-            status: response.status,
-            data: response.data
-        });
-        return response;
-    },
-    (error) => {
+    response => response,
+    error => {
         console.error('API Error:', {
             message: error.message,
             response: error.response?.data,

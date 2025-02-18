@@ -11,7 +11,9 @@
     "predeploy": "node scripts/test-deployment.js",
     "deploy": "git push render main",
     "build": "cd frontend && npm install && npm run build",
-    "postbuild": "xcopy /E /I frontend\\dist public"
+    "postbuild": "xcopy /E /I frontend\\dist public",
+    "audit:fix": "npm audit fix --force",
+    "prestart": "npm audit fix"
   },
   "dependencies": {
     "axios": "^1.7.9",
@@ -53,5 +55,10 @@
     "clearMocks": true,
     "resetMocks": true,
     "restoreMocks": true
+  },
+  "overrides": {
+    "nth-check": ">=2.0.1",
+    "postcss": ">=8.4.31",
+    "follow-redirects": ">=1.15.4"
   }
 }

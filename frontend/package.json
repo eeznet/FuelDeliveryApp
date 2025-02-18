@@ -7,7 +7,10 @@
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "audit:fix": "npm audit fix --force",
+    "prestart": "npm audit fix",
+    "prebuild": "node scripts/download-assets.js"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -43,5 +46,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "overrides": {
+    "nth-check": ">=2.0.1",
+    "postcss": ">=8.4.31",
+    "follow-redirects": ">=1.15.4"
   }
 }

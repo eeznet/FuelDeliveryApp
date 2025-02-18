@@ -8,36 +8,26 @@ import {
     Typography,
     Link,
     Box,
-    Alert,
-    MenuItem
+    Alert
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 
-const Register = () => {
+const Login = () => {
     const [formData, setFormData] = useState({
-        name: '',
         email: '',
-        password: '',
-        role: 'client'
+        password: ''
     });
     const [error, setError] = useState('');
-    const { register } = useAuth();
+    const { login } = useAuth();
     const navigate = useNavigate();
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await register(formData);
-            navigate('/login');
+            await login(formData);
+            navigate('/');
         } catch (err) {
-            setError(err.response?.data?.message || 'Registration failed');
+            setError(err.response?.data?.message || 'Login failed');
         }
     };
 
@@ -46,7 +36,7 @@ const Register = () => {
             <Box sx={{ mt: 8 }}>
                 <Paper sx={{ p: 4 }}>
                     <Typography variant="h4" align="center" gutterBottom>
-                        Register
+                        Login
                     </Typography>
                     {error && (
                         <Alert severity="error" sx={{ mb: 2 }}>
@@ -56,20 +46,11 @@ const Register = () => {
                     <form onSubmit={handleSubmit}>
                         <TextField
                             fullWidth
-                            label="Full Name"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            margin="normal"
-                            required
-                        />
-                        <TextField
-                            fullWidth
                             label="Email"
                             name="email"
                             type="email"
                             value={formData.email}
-                            onChange={handleChange}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             margin="normal"
                             required
                         />
@@ -79,25 +60,10 @@ const Register = () => {
                             name="password"
                             type="password"
                             value={formData.password}
-                            onChange={handleChange}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                             margin="normal"
                             required
-                            autoComplete="new-password"
-                            helperText="Password must be at least 8 characters long"
                         />
-                        <TextField
-                            fullWidth
-                            select
-                            label="Role"
-                            name="role"
-                            value={formData.role}
-                            onChange={handleChange}
-                            margin="normal"
-                            required
-                        >
-                            <MenuItem value="client">Client</MenuItem>
-                            <MenuItem value="driver">Driver</MenuItem>
-                        </TextField>
                         <Button
                             fullWidth
                             type="submit"
@@ -105,13 +71,13 @@ const Register = () => {
                             color="primary"
                             sx={{ mt: 3 }}
                         >
-                            Register
+                            Login
                         </Button>
                         <Box sx={{ mt: 2, textAlign: 'center' }}>
                             <Typography>
-                                Already have an account?{' '}
-                                <Link component={RouterLink} to="/login">
-                                    Login here
+                                Don't have an account?{' '}
+                                <Link component={RouterLink} to="/register">
+                                    Register here
                                 </Link>
                             </Typography>
                         </Box>
@@ -122,4 +88,4 @@ const Register = () => {
     );
 };
 
-export default Register; 
+export default Login; 

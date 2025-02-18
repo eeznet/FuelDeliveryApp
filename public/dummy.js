@@ -1,0 +1,1 @@
+// This file exists just to ensure the public directory exists 

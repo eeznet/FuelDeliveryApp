@@ -10,9 +10,9 @@ const NotFound = () => {
             <Box sx={{ 
                 display: 'flex', 
                 flexDirection: 'column',
-                alignItems: 'center', 
+                alignItems: 'center',
                 justifyContent: 'center',
-                minHeight: '60vh'
+                minHeight: '80vh'
             }}>
                 <Typography variant="h2" gutterBottom>
                     404

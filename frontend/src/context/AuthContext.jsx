@@ -6,6 +6,7 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         checkAuth();
@@ -26,15 +27,25 @@ export const AuthProvider = ({ children }) => {
     };
 
     const login = async (credentials) => {
-        const response = await auth.login(credentials);
-        localStorage.setItem('token', response.data.token);
-        setUser(response.data.user);
-        return response.data;
+        try {
+            const response = await auth.login(credentials);
+            localStorage.setItem('token', response.data.token);
+            setUser(response.data.user);
+            return response.data;
+        } catch (error) {
+            setError(error.response?.data?.message || 'Login failed');
+            throw error;
+        }
     };
 
     const register = async (userData) => {
-        const response = await auth.register(userData);
-        return response.data;
+        try {
+            const response = await auth.register(userData);
+            return response.data;
+        } catch (error) {
+            setError(error.response?.data?.message || 'Registration failed');
+            throw error;
+        }
     };
 
     const logout = async () => {
@@ -47,8 +58,8 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
-            {!loading && children}
+        <AuthContext.Provider value={{ user, loading, error, login, register, logout }}>
+            {children}
         </AuthContext.Provider>
     );
 };

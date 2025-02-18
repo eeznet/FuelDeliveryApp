@@ -1,14 +1,15 @@
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import ProtectedRoute from '../components/ProtectedRoute';
+import PrivateRoute from '../components/PrivateRoute';
 
 // Layouts
 import AuthLayout from '../layouts/AuthLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
 
 // Auth Pages
-import Login from '../pages/auth/Login';
-import Register from '../pages/auth/Register';
+import Login from '../pages/Login';
+import Register from '../pages/Register';
 
 // Role-based Dashboards
 import OwnerDashboard from '../pages/dashboards/OwnerDashboard';
@@ -35,9 +36,9 @@ const AppRoutes = () => {
                 <Route
                     path="/owner/*"
                     element={
-                        <ProtectedRoute allowedRoles={['owner']}>
+                        <PrivateRoute allowedRoles={['owner']}>
                             <OwnerDashboard />
-                        </ProtectedRoute>
+                        </PrivateRoute>
                     }
                 />
 
@@ -45,9 +46,9 @@ const AppRoutes = () => {
                 <Route
                     path="/admin/*"
                     element={
-                        <ProtectedRoute allowedRoles={['admin', 'owner']}>
+                        <PrivateRoute allowedRoles={['admin', 'owner']}>
                             <AdminDashboard />
-                        </ProtectedRoute>
+                        </PrivateRoute>
                     }
                 />
 
@@ -55,9 +56,9 @@ const AppRoutes = () => {
                 <Route
                     path="/driver/*"
                     element={
-                        <ProtectedRoute allowedRoles={['driver']}>
+                        <PrivateRoute allowedRoles={['driver']}>
                             <DriverDashboard />
-                        </ProtectedRoute>
+                        </PrivateRoute>
                     }
                 />
 
@@ -65,9 +66,9 @@ const AppRoutes = () => {
                 <Route
                     path="/client/*"
                     element={
-                        <ProtectedRoute allowedRoles={['client']}>
+                        <PrivateRoute allowedRoles={['client']}>
                             <ClientDashboard />
-                        </ProtectedRoute>
+                        </PrivateRoute>
                     }
                 />
 
@@ -75,18 +76,18 @@ const AppRoutes = () => {
                 <Route
                     path="/supervisor/*"
                     element={
-                        <ProtectedRoute allowedRoles={['supervisor', 'owner']}>
+                        <PrivateRoute allowedRoles={['supervisor', 'owner']}>
                             <SupervisorDashboard />
-                        </ProtectedRoute>
+                        </PrivateRoute>
                     }
                 />
 
                 <Route
                     path="/finance/*"
                     element={
-                        <ProtectedRoute allowedRoles={['finance', 'owner']}>
+                        <PrivateRoute allowedRoles={['finance', 'owner']}>
                             <FinanceDashboard />
-                        </ProtectedRoute>
+                        </PrivateRoute>
                     }
                 />
             </Route>

@@ -8,33 +8,29 @@ import {
     Typography,
     Link,
     Box,
-    Alert
+    Alert,
+    MenuItem
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 
-const Login = () => {
+const Register = () => {
     const [formData, setFormData] = useState({
+        name: '',
         email: '',
-        password: ''
+        password: '',
+        role: 'client'
     });
     const [error, setError] = useState('');
-    const { login } = useAuth();
+    const { register } = useAuth();
     const navigate = useNavigate();
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await login(formData);
-            navigate('/dashboard');
+            await register(formData);
+            navigate('/login');
         } catch (err) {
-            setError(err.response?.data?.message || 'Login failed');
+            setError(err.response?.data?.message || 'Registration failed');
         }
     };
 
@@ -43,7 +39,7 @@ const Login = () => {
             <Box sx={{ mt: 8 }}>
                 <Paper sx={{ p: 4 }}>
                     <Typography variant="h4" align="center" gutterBottom>
-                        Login
+                        Register
                     </Typography>
                     {error && (
                         <Alert severity="error" sx={{ mb: 2 }}>
@@ -53,14 +49,22 @@ const Login = () => {
                     <form onSubmit={handleSubmit}>
                         <TextField
                             fullWidth
+                            label="Full Name"
+                            name="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
+                            margin="normal"
+                            required
+                        />
+                        <TextField
+                            fullWidth
                             label="Email"
                             name="email"
                             type="email"
                             value={formData.email}
-                            onChange={handleChange}
+                            onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
                             margin="normal"
                             required
-                            autoComplete="username"
                         />
                         <TextField
                             fullWidth
@@ -68,11 +72,23 @@ const Login = () => {
                             name="password"
                             type="password"
                             value={formData.password}
-                            onChange={handleChange}
+                            onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
                             margin="normal"
                             required
-                            autoComplete="current-password"
                         />
+                        <TextField
+                            select
+                            fullWidth
+                            label="Role"
+                            name="role"
+                            value={formData.role}
+                            onChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
+                            margin="normal"
+                            required
+                        >
+                            <MenuItem value="client">Client</MenuItem>
+                            <MenuItem value="driver">Driver</MenuItem>
+                        </TextField>
                         <Button
                             fullWidth
                             type="submit"
@@ -80,13 +96,13 @@ const Login = () => {
                             color="primary"
                             sx={{ mt: 3 }}
                         >
-                            Login
+                            Register
                         </Button>
                         <Box sx={{ mt: 2, textAlign: 'center' }}>
                             <Typography>
-                                Don't have an account?{' '}
-                                <Link component={RouterLink} to="/register">
-                                    Register here
+                                Already have an account?{' '}
+                                <Link component={RouterLink} to="/login">
+                                    Login here
                                 </Link>
                             </Typography>
                         </Box>
@@ -97,4 +113,4 @@ const Login = () => {
     );
 };
 
-export default Login; 
+export default Register; 

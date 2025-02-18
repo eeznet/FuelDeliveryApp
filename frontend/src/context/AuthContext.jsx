@@ -33,7 +33,8 @@ export const AuthProvider = ({ children }) => {
             setUser(response.data.user);
             return response.data;
         } catch (error) {
-            setError(error.response?.data?.message || 'Login failed');
+            console.error('Login Error:', error);
+            setError(error.response?.data?.message || 'Login failed. Please try again.');
             throw error;
         }
     };

@@ -1,12 +1,14 @@
 services:
   - type: web
-    name: fueldeliveryapp-1
-    env: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
+    name: fueldeliverywebapp
+    env: node
+    buildCommand: npm install
+    startCommand: node server.mjs
     envVars:
-      - key: VITE_API_URL
-        value: https://fuel-delivery-backend.onrender.com/api
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
     branch: main
     autoDeploy: true
     routes:

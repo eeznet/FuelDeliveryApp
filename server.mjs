@@ -25,19 +25,7 @@ app.use(corsMiddleware);
 app.use(express.json());
 app.use(bodyParser.json());
 
-// Serve static files first
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Basic routes first
-app.get('/', (req, res) => {
-    logger.info('Root endpoint hit');
-    res.json({ 
-        message: 'Fuel Delivery API is running',
-        environment: process.env.NODE_ENV,
-        timestamp: new Date().toISOString()
-    });
-});
-
+// API Routes - must be before static files
 app.get('/api', (req, res) => {
     res.json({ 
         success: true,
@@ -54,20 +42,14 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-app.get('/api/test', (req, res) => {
-    logger.info('Test endpoint hit');
-    res.json({
-        message: 'API is accessible',
-        timestamp: new Date().toISOString()
-    });
-});
-
 // API routes with /api prefix
 app.use('/api/auth', authRoutes);
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/user', userRoutes);
 
-// Handle SPA routing - must be after API routes
+// Static files and SPA routing - must be after API routes
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.get('*', (req, res) => {
     if (req.accepts('html')) {
         res.sendFile(path.join(__dirname, 'public', 'index.html'));

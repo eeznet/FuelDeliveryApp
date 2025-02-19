@@ -8,24 +8,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: "10000"
-    branch: main
-    autoDeploy: true
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-
-  - type: web
-    name: fuel-delivery-backend
-    env: node
-    buildCommand: npm install
-    startCommand: node server.mjs
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 10000
+        value: "3000"
       - key: FRONTEND_URL
         value: https://fueldeliveryapp-1.onrender.com
       - key: JWT_SECRET

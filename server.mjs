@@ -20,10 +20,11 @@ dotenv.config();
 const app = express();
 let server;
 
-// Apply CORS middleware first
+// CORS must be first
 app.use(corsMiddleware);
 
-// Other middleware
+// Then other middleware
+app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
@@ -44,6 +45,16 @@ app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    next();
+});
+
+// Add CORS debug logging
+app.use((req, res, next) => {
+    logger.info('Request headers:', {
+        origin: req.headers.origin,
+        method: req.method,
+        path: req.path
+    });
     next();
 });
 

@@ -11,20 +11,33 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
     (config) => {
+        console.log('Making request:', {
+            url: config.url,
+            method: config.method,
+            headers: config.headers
+        });
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => Promise.reject(error)
+    (error) => {
+        console.error('Request error:', error);
+        return Promise.reject(error);
+    }
 );
 
 // Response interceptor
 api.interceptors.response.use(
     (response) => response.data,
     (error) => {
-        console.error('API Error:', error);
+        console.error('Response error:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        });
+        
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
             window.location.href = '/login';

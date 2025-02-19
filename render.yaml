@@ -26,6 +26,8 @@ services:
         value: production
       - key: CORS_ORIGIN
         value: https://fueldeliveryapp-1.onrender.com
+      - key: PORT
+        value: 10000
       - key: JWT_SECRET
         generateValue: true
       - key: MONGO_URI

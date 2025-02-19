@@ -2,14 +2,7 @@
   "name": "fuel-delivery-app",
   "version": "1.0.0",
   "type": "module",
-<<<<<<< HEAD
   "main": "server.mjs",
-=======
-  "exports": {
-    "./models/*": "./models/*.mjs",
-    "./controllers/*": "./controllers/*.mjs"
-  },
->>>>>>> v2.0-development
   "scripts": {
     "start": "node server.mjs",
     "dev": "nodemon server.mjs",

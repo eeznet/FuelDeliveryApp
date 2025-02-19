@@ -1,0 +1,30 @@
+app = "fueldeliveryapp"
+primary_region = "iad"
+
+[build]
+  builder = "heroku/buildpacks:20"
+
+[env]
+  PORT = "3000"
+  NODE_ENV = "production"
+  MONGO_URI = "mongodb+srv://eeznetsolutions:Yp3mmebgxnQHA6XG@fueldelapp.iaiqh.mongodb.net/fuelDeliveryApp?retryWrites=true&w=majority"
+  DATABASE_URL = "postgres://fuel_delivery_user:vcDMwd55ajsFUnZqlPuItAm1k9bIn88N@dpg-cunj0p23esus73ciric0-a.oregon-postgres.render.com/fuel_delivery_db"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 3000
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"] 

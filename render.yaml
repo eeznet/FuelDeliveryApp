@@ -2,25 +2,26 @@ services:
   - type: web
     name: fueldeliverywebapp
     env: node
-    buildCommand: |
-      npm install
-      npm run build
-    startCommand: node server.mjs
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: "3000"
-      - key: FRONTEND_URL
-        value: https://fueldeliveryapp-1.onrender.com
-      - key: JWT_SECRET
-        generateValue: true
+        value: 3000
       - key: MONGO_URI
         value: mongodb+srv://eeznetsolutions:Yp3mmebgxnQHA6XG@fueldelapp.iaiqh.mongodb.net/fuelDeliveryApp?retryWrites=true&w=majority
       - key: DATABASE_URL
         value: postgres://fuel_delivery_user:vcDMwd55ajsFUnZqlPuItAm1k9bIn88N@dpg-cunj0p23esus73ciric0-a.oregon-postgres.render.com/fuel_delivery_db
-    healthCheckPath: /api/health
-    autoDeploy: true
+
+  - type: web
+    name: fueldeliverywebapp-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://fueldeliverywebapp.onrender.com/api
 
 databases:
   - name: fuel-delivery-db

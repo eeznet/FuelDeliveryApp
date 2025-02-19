@@ -18,7 +18,7 @@ dotenv.config();
 
 const app = express();
 
-// IMPORTANT: Health check route MUST be defined BEFORE any middleware
+// IMPORTANT: Health check route MUST be first, before ANY middleware or router setup
 app.get('/health', (req, res) => {
     logger.info('✅ Health check endpoint hit');
     res.status(200).json({
@@ -46,7 +46,7 @@ if (DEBUG) {
     });
 }
 
-// Register routes BEFORE static files and catch-all
+// Register routes AFTER health check but BEFORE catch-all
 const router = express.Router();
 
 router.get('/', (req, res) => {
@@ -58,7 +58,7 @@ router.get('/', (req, res) => {
     });
 });
 
-// Mount all routes under /api
+// Mount API routes
 app.use('/api', router);
 app.use('/api/auth', authRoutes);
 app.use('/api/invoice', invoiceRoutes);

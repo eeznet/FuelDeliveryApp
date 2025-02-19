@@ -28,17 +28,21 @@ app.use(bodyParser.json());
 // Add at the top after imports
 const DEBUG = true;
 
-// Add before routes
+// Debug logging
 if (DEBUG) {
     app.use((req, res, next) => {
-        console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+        console.log('--------------------');
+        console.log(`REQUEST: ${req.method} ${req.url}`);
+        console.log('Headers:', JSON.stringify(req.headers, null, 2));
         next();
     });
 }
 
-// API Routes - must be before static files
-app.get('/api', (req, res) => {
-    console.log('API endpoint hit');
+// Register routes BEFORE static files and catch-all
+const router = express.Router();
+
+router.get('/', (req, res) => {
+    console.log('✅ API root endpoint hit');
     res.json({ 
         success: true,
         message: 'Fuel Delivery API is running',
@@ -46,8 +50,8 @@ app.get('/api', (req, res) => {
     });
 });
 
-app.get('/api/health', (req, res) => {
-    console.log('Health endpoint hit');
+router.get('/health', (req, res) => {
+    console.log('✅ Health endpoint hit');
     res.json({
         success: true,
         status: 'ok',
@@ -55,36 +59,39 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// API routes with /api prefix
+// Mount all routes under /api
+app.use('/api', router);
 app.use('/api/auth', authRoutes);
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/user', userRoutes);
 
-// Static files and SPA routing - must be after API routes
+// Static files after API routes
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Catch-all route
 app.get('*', (req, res) => {
     console.log(`404 - ${req.method} ${req.url}`);
-    if (req.accepts('html')) {
-        res.sendFile(path.join(__dirname, 'public', 'index.html'));
-    } else {
-        res.status(404).json({
-            success: false,
-            message: 'Route not found',
-            requestedPath: req.originalUrl
+    res.status(404).json({
+        success: false,
+        message: 'Route not found',
+        requestedPath: req.originalUrl
+    });
+});
+
+// Print registered routes on startup
+console.log('=== REGISTERED ROUTES ===');
+app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+        console.log(`${Object.keys(middleware.route.methods)} ${middleware.route.path}`);
+    } else if (middleware.name === 'router') {
+        middleware.handle.stack.forEach((handler) => {
+            if (handler.route) {
+                console.log(`${Object.keys(handler.route.methods)} ${handler.route.path}`);
+            }
         });
     }
 });
-
-// Add after route registration
-if (DEBUG) {
-    console.log('Registered routes:');
-    app._router.stack.forEach(r => {
-        if (r.route && r.route.path) {
-            console.log(`${Object.keys(r.route.methods)} ${r.route.path}`);
-        }
-    });
-}
+console.log('========================');
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -116,7 +123,7 @@ const connectDB = async () => {
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, async () => {
-        logger.info(`Server running on port ${PORT}`);
+        console.log(`Server running on port ${PORT}`);
         await connectDB();
     });
 }

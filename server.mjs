@@ -16,10 +16,19 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
+// Initialize express FIRST
 const app = express();
 
-// IMPORTANT: Health check route MUST be first, before ANY middleware or router setup
+// CRITICAL: Health check route must be absolute first, before anything else
 app.get('/health', (req, res) => {
+    res.status(200).send('ok'); // Simplest possible response
+});
+
+// Initialize logger AFTER health check
+import logger from './config/logger.mjs';
+
+// Now we can use logger for all other routes
+app.get('/health-detailed', (req, res) => {
     logger.info('✅ Health check endpoint hit');
     res.status(200).json({
         status: 'ok',
@@ -28,7 +37,7 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Now add middleware
+// Regular middleware
 app.use(corsMiddleware);
 app.use(express.json());
 app.use(bodyParser.json());

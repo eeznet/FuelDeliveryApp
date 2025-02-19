@@ -24,6 +24,8 @@ services:
         value: 6f7d2fa0a35e8b4136b1c44781e63df57d22a0ad739b4f358f234fd013ef29e736cf722e730ab1d8b9e738120ac8e5edbbdb7c23ad2c6a99d7b8b705e68f0b76b
       - key: GOOGLE_MAPS_API_KEY
         value: AIzaSyA9Lhvp93iB6jiSs1teK48IRgobjhy_NZ4
+      - key: NODE_VERSION
+        value: 18.0.0
 
   - type: web
     name: fueldeliverywebapp-frontend

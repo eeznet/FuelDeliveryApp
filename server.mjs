@@ -23,6 +23,21 @@ let server;
 // CORS must be first
 app.use(corsMiddleware);
 
+// After corsMiddleware but before routes
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'https://fueldeliveryapp-1.onrender.com');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+    
+    next();
+});
+
 // Then other middleware
 app.use(express.json());
 app.use(bodyParser.json());

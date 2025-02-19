@@ -2,8 +2,10 @@ services:
   - type: web
     name: fueldeliverywebapp
     env: node
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: |
+      npm install
+      npm run build
+    startCommand: node server.mjs
     envVars:
       - key: NODE_ENV
         value: production

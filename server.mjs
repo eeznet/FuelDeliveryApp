@@ -18,10 +18,18 @@ dotenv.config();
 
 const app = express();
 
-// CORS must be first
-app.use(corsMiddleware);
+// Health check MUST be before any middleware
+app.get('/health', (req, res) => {
+    logger.info('✅ Health check endpoint hit');
+    res.status(200).json({
+        status: 'ok',
+        message: 'Server is healthy',
+        timestamp: new Date().toISOString()
+    });
+});
 
-// Middleware
+// CORS and other middleware after health check
+app.use(corsMiddleware);
 app.use(express.json());
 app.use(bodyParser.json());
 
@@ -47,15 +55,6 @@ router.get('/', (req, res) => {
         success: true,
         message: 'Fuel Delivery API is running',
         environment: process.env.NODE_ENV
-    });
-});
-
-app.get('/health', (req, res) => {
-    logger.info('✅ Root health check endpoint hit');
-    res.json({
-        status: 'ok',
-        message: 'Server is healthy',
-        timestamp: new Date().toISOString()
     });
 });
 

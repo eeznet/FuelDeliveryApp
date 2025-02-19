@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+const BASE_URL = 'https://fuel-delivery-backend.onrender.com/api';
+
+console.log('API Base URL:', BASE_URL);
+
 const api = axios.create({
-    baseURL: 'https://fuel-delivery-backend.onrender.com/api',
+    baseURL: BASE_URL,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -9,13 +13,14 @@ const api = axios.create({
     withCredentials: false
 });
 
-// Request interceptor
+// Request interceptor with more detailed logging
 api.interceptors.request.use(
     (config) => {
-        console.log('Making request:', {
-            url: config.url,
+        console.log('Outgoing Request:', {
+            url: `${config.baseURL}${config.url}`,
             method: config.method,
-            headers: config.headers
+            headers: config.headers,
+            data: config.data
         });
         const token = localStorage.getItem('token');
         if (token) {
@@ -24,19 +29,44 @@ api.interceptors.request.use(
         return config;
     },
     (error) => {
-        console.error('Request error:', error);
+        console.error('Request Configuration Error:', error);
         return Promise.reject(error);
     }
 );
 
-// Response interceptor
+// Add axios retry logic
+api.interceptors.response.use(null, async (error) => {
+    if (error.config && error.response && error.response.status === 0) {
+        // Retry the request once
+        try {
+            console.log('Retrying failed request...');
+            return await axios.request(error.config);
+        } catch (retryError) {
+            return Promise.reject(retryError);
+        }
+    }
+    return Promise.reject(error);
+});
+
+// Response interceptor with better error handling
 api.interceptors.response.use(
-    (response) => response.data,
+    (response) => {
+        console.log('Response received:', {
+            status: response.status,
+            data: response.data
+        });
+        return response.data;
+    },
     (error) => {
-        console.error('Response error:', {
+        console.error('API Error Details:', {
             message: error.message,
-            response: error.response?.data,
-            status: error.response?.status
+            status: error.response?.status,
+            data: error.response?.data,
+            config: {
+                url: error.config?.url,
+                method: error.config?.method,
+                headers: error.config?.headers
+            }
         });
         
         if (error.response?.status === 401) {
@@ -48,7 +78,17 @@ api.interceptors.response.use(
 );
 
 export const auth = {
-    login: (credentials) => api.post('/auth/login', credentials),
+    login: async (credentials) => {
+        try {
+            console.log('Attempting login with:', credentials);
+            const response = await api.post('/auth/login', credentials);
+            console.log('Login response:', response);
+            return response;
+        } catch (error) {
+            console.error('Login error:', error);
+            throw error;
+        }
+    },
     register: (userData) => api.post('/auth/register', userData),
     logout: () => api.post('/auth/logout'),
     getProfile: () => api.get('/auth/me')

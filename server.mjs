@@ -9,7 +9,7 @@ import pool from './config/database.mjs';
 import authRoutes from './routes/authRoutes.mjs';
 import invoiceRoutes from './routes/invoiceRoutes.mjs';
 import userRoutes from './routes/userRoutes.mjs';
-import corsMiddleware from './config/corsMiddleware.mjs';
+import { corsMiddleware, handleOptions } from './config/corsMiddleware.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +22,9 @@ let server;
 
 // CORS must be first
 app.use(corsMiddleware);
+
+// Handle OPTIONS requests
+app.options('*', handleOptions);
 
 // Then other middleware
 app.use(express.json());
@@ -113,7 +116,17 @@ app.use((req, res, next) => {
     next();
 });
 
-// Debug middleware to catch unmatched routes
+// Move this BEFORE the 404 handler
+app.get('/api/test', (req, res) => {
+    logger.info('Test endpoint hit');
+    res.json({ 
+        message: 'API is accessible',
+        headers: req.headers,
+        origin: req.headers.origin 
+    });
+});
+
+// 404 handler comes after
 app.use('*', (req, res) => {
     logger.warn('404 - Route not found:', {
         method: req.method,

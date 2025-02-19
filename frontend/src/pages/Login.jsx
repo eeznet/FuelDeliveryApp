@@ -11,6 +11,7 @@ import {
     Alert
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
+import ApiTest from '../components/ApiTest';
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -33,6 +34,7 @@ const Login = () => {
 
     return (
         <Container maxWidth="sm">
+            <ApiTest />
             <Box sx={{ mt: 8 }}>
                 <Paper sx={{ p: 4 }}>
                     <Typography variant="h4" align="center" gutterBottom>

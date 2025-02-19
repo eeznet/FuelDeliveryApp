@@ -3,7 +3,7 @@ services:
     name: fueldeliverywebapp
     env: node
     buildCommand: npm install
-    startCommand: node server.mjs
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production

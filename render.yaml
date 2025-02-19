@@ -2,12 +2,11 @@ services:
   - type: web
     name: fueldeliveryapp-1
     env: static
-    buildCommand: |
-      cd frontend
-      rm -rf node_modules package-lock.json
-      npm install
-      npm run build
+    buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://fuel-delivery-backend.onrender.com/api
     branch: main
     autoDeploy: true
     routes:
@@ -20,21 +19,19 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: npm ci
+    buildCommand: npm install
     startCommand: node server.mjs
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
+      - key: CORS_ORIGIN
+        value: https://fueldeliveryapp-1.onrender.com
       - key: JWT_SECRET
         generateValue: true
       - key: MONGO_URI
         value: mongodb+srv://eeznetsolutions:Yp3mmebgxnQHA6XG@fueldelapp.iaiqh.mongodb.net/fuelDeliveryApp?retryWrites=true&w=majority
       - key: DATABASE_URL
         value: postgres://fuel_delivery_user:vcDMwd55ajsFUnZqlPuItAm1k9bIn88N@dpg-cunj0p23esus73ciric0-a.oregon-postgres.render.com/fuel_delivery_db
-      - key: CORS_ORIGIN
-        value: https://fueldeliveryapp-1.onrender.com
     healthCheckPath: /api/health
     autoDeploy: true
 

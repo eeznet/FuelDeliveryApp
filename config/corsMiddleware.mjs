@@ -8,6 +8,7 @@ const corsOptions = {
     origin: [
         'https://fueldeliveryapp-1.onrender.com',
         'http://localhost:3001',
+        'http://localhost:5173',
         process.env.CORS_ORIGIN
     ].filter(Boolean),
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

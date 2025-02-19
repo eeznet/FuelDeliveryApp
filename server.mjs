@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes.mjs';
 import invoiceRoutes from './routes/invoiceRoutes.mjs';
 import userRoutes from './routes/userRoutes.mjs';
 import cors from 'cors';
+import corsMiddleware from './config/corsMiddleware.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,22 +21,8 @@ dotenv.config();
 const app = express();
 let server;
 
-// Update CORS Configuration
-const corsOptions = {
-    origin: [
-        'https://fueldeliveryapp-1.onrender.com',
-        'https://fuel-delivery-backend.onrender.com',
-        'http://localhost:5173'
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-};
-
-// Make sure this is before any routes
-app.use(cors(corsOptions));
+// Apply CORS before other middleware
+app.use(corsMiddleware);
 app.use(bodyParser.json());
 app.use(express.static('public'));
 

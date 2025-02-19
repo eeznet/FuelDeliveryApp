@@ -3,41 +3,32 @@ import axios from 'axios';
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'https://fuel-delivery-backend.onrender.com/api',
     headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Content-Type': 'application/json'
     },
     withCredentials: true
 });
 
-// Remove duplicate interceptor - we have two identical ones
-// Keep only one request interceptor
+// Request interceptor
 api.interceptors.request.use(
     (config) => {
-        console.log('Making request:', config);
-        config.withCredentials = true;
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => {
-        console.error('Request error:', error);
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
-// Improve error handling
+// Response interceptor
 api.interceptors.response.use(
-    response => response,
-    error => {
-        console.error('API Error:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-            config: error.config
-        });
-        return Promise.reject(error);
+    (response) => response.data,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error.response?.data || error);
     }
 );
 

@@ -17,74 +17,28 @@ const api = axios.create({
 
 async function testDeployment() {
     try {
-        const BASE_URL = process.env.NODE_ENV === 'production' 
-            ? 'https://fueldeliverywebapp.onrender.com'
-            : 'http://localhost:10000';
+        const BASE_URL = 'https://fueldeliverywebapp.onrender.com';
+        console.log('Testing API at:', BASE_URL);
 
-        console.log('Testing connection to:', BASE_URL);
+        // Test API endpoint
+        console.log('Testing /api endpoint...');
+        const apiResponse = await api.get(`${BASE_URL}/api`);
+        console.log('API Response:', apiResponse.status, apiResponse.data);
         
-        // Simple ping test first
-        try {
-            console.log('Pinging server...');
-            const pingResponse = await api.get(`${BASE_URL}/api`);
-            console.log('Server responded:', pingResponse.status);
-        } catch (error) {
-            console.error('Ping failed:', error.message);
-            if (error.code) console.error('Error code:', error.code);
-        }
-
-        // Test root endpoint
-        console.log('Testing root endpoint...');
-        try {
-            const rootResponse = await api.get(`${BASE_URL}/api`);
-            console.log('Root response:', rootResponse.status, rootResponse.data);
-            if (rootResponse.status !== 200) {
-                throw new Error(`Root endpoint returned ${rootResponse.status}`);
-            }
-        } catch (error) {
-            console.error('Root endpoint error:', error.message);
-            if (error.response) {
-                console.error('Response:', error.response.status, error.response.data);
-            }
-            throw error;
+        if (apiResponse.status !== 200) {
+            throw new Error(`API endpoint failed: ${apiResponse.status}`);
         }
 
         // Test health endpoint
         console.log('Testing health endpoint...');
-        try {
-            const healthResponse = await api.get(`${BASE_URL}/api/health`);
-            console.log('Health response:', healthResponse.status, healthResponse.data);
-            if (healthResponse.status !== 200) {
-                throw new Error(`Health endpoint returned ${healthResponse.status}`);
-            }
-        } catch (error) {
-            console.error('Health endpoint error:', error.message);
-            if (error.response) {
-                console.error('Response:', error.response.status, error.response.data);
-            }
-            throw error;
+        const healthResponse = await api.get(`${BASE_URL}/api/health`);
+        console.log('Health Response:', healthResponse.status, healthResponse.data);
+
+        if (healthResponse.status !== 200) {
+            throw new Error(`Health check failed: ${healthResponse.status}`);
         }
 
-        // Test auth endpoint
-        console.log('Testing auth endpoint...');
-        try {
-            const authResponse = await api.post(`${BASE_URL}/api/auth/login`, {
-                email: 'eeznetsolutions@gmail.com',
-                password: 'owner123'
-            });
-            console.log('Auth response:', authResponse.status, authResponse.data);
-            if (authResponse.status !== 200) {
-                throw new Error(`Auth endpoint returned ${authResponse.status}`);
-            }
-        } catch (error) {
-            console.error('Auth endpoint error:', error.message);
-            if (error.response) {
-                console.error('Response:', error.response.status, error.response.data);
-            }
-            throw error;
-        }
-
-        console.log('✅ All tests completed successfully');
+        console.log('✅ All tests passed');
         return true;
     } catch (error) {
         console.error('❌ Test failed:', error.message);

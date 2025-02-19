@@ -25,6 +25,9 @@ app.use(corsMiddleware);
 app.use(express.json());
 app.use(bodyParser.json());
 
+// Serve static files first
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Basic routes first
 app.get('/', (req, res) => {
     logger.info('Root endpoint hit');
@@ -36,19 +39,17 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api', (req, res) => {
-    logger.info('API root endpoint hit');
     res.json({ 
+        success: true,
         message: 'Fuel Delivery API is running',
-        environment: process.env.NODE_ENV,
-        timestamp: new Date().toISOString()
+        environment: process.env.NODE_ENV
     });
 });
 
 app.get('/api/health', (req, res) => {
-    logger.info('Health check endpoint hit');
     res.json({
+        success: true,
         status: 'ok',
-        timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV
     });
 });
@@ -66,14 +67,17 @@ app.use('/api/auth', authRoutes);
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/user', userRoutes);
 
-// 404 handler
-app.use((req, res) => {
-    logger.info(`404 - Route not found: ${req.method} ${req.originalUrl}`);
-    res.status(404).json({
-        success: false,
-        message: 'Route not found',
-        requestedPath: req.originalUrl
-    });
+// Handle SPA routing - must be after API routes
+app.get('*', (req, res) => {
+    if (req.accepts('html')) {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    } else {
+        res.status(404).json({
+            success: false,
+            message: 'Route not found',
+            requestedPath: req.originalUrl
+        });
+    }
 });
 
 // Error handler

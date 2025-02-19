@@ -102,6 +102,21 @@ app.use((err, req, res, next) => {
     });
 });
 
+// Update the database connection configuration
+const dbConfig = {
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    port: 5432, // PostgreSQL port, not the web server port
+    ssl: {
+        rejectUnauthorized: false
+    }
+};
+
+// Update the port configuration
+const PORT = process.env.PORT || 3000;
+
 // Database connection
 const connectDB = async () => {
     try {
@@ -120,7 +135,6 @@ const connectDB = async () => {
 };
 
 // Start server
-const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, async () => {
         console.log(`Server running on port ${PORT}`);

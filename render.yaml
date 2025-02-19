@@ -3,7 +3,7 @@ services:
     name: fueldeliverywebapp
     env: node
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node server.mjs
     envVars:
       - key: NODE_ENV
         value: production
@@ -11,8 +11,18 @@ services:
         value: 3000
       - key: MONGO_URI
         value: mongodb+srv://eeznetsolutions:Yp3mmebgxnQHA6XG@fueldelapp.iaiqh.mongodb.net/fuelDeliveryApp?retryWrites=true&w=majority
-      - key: DATABASE_URL
-        value: postgres://fuel_delivery_user:vcDMwd55ajsFUnZqlPuItAm1k9bIn88N@dpg-cunj0p23esus73ciric0-a.oregon-postgres.render.com/fuel_delivery_db
+      - key: DB_HOST
+        value: dpg-cunj0p23esus73ciric0-a
+      - key: DB_NAME
+        value: fuel_delivery_db
+      - key: DB_USER
+        value: fuel_delivery_user
+      - key: DB_PASSWORD
+        value: vcDMwd55ajsFUnZqlPuItAm1k9bIn88N
+      - key: JWT_SECRET
+        value: 6f7d2fa0a35e8b4136b1c44781e63df57d22a0ad739b4f358f234fd013ef29e736cf722e730ab1d8b9e738120ac8e5edbbdb7c23ad2c6a99d7b8b705e68f0b76b
+      - key: GOOGLE_MAPS_API_KEY
+        value: AIzaSyA9Lhvp93iB6jiSs1teK48IRgobjhy_NZ4
 
   - type: web
     name: fueldeliverywebapp-frontend

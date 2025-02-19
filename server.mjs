@@ -9,7 +9,6 @@ import pool from './config/database.mjs';
 import authRoutes from './routes/authRoutes.mjs';
 import invoiceRoutes from './routes/invoiceRoutes.mjs';
 import userRoutes from './routes/userRoutes.mjs';
-import cors from 'cors';
 import corsMiddleware from './config/corsMiddleware.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,20 +20,12 @@ dotenv.config();
 const app = express();
 let server;
 
-// Apply CORS before other middleware
+// Apply CORS middleware first
 app.use(corsMiddleware);
+
+// Other middleware
 app.use(bodyParser.json());
 app.use(express.static('public'));
-
-// Add CORS headers to all responses
-app.use((req, res, next) => {
-    // Set the specific origin instead of *
-    res.header('Access-Control-Allow-Origin', req.headers.origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
-});
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {
@@ -80,11 +71,7 @@ connectDatabases();
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV
-    });
+    res.json({ status: 'ok' });
 });
 
 // Add a root endpoint for basic connectivity test
@@ -133,6 +120,15 @@ app.use('*', (req, res) => {
         success: false,
         message: 'Route not found',
         requestedPath: req.originalUrl
+    });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    logger.error('Error:', err);
+    res.status(500).json({
+        success: false,
+        message: 'Internal server error'
     });
 });
 

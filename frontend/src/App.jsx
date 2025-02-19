@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
@@ -40,3 +41,13 @@ function App() {
 }
 
 export default App; 
+=======
+import ChatPlaceholder from './components/chat/ChatPlaceholder';
+
+// ... in your routes configuration
+{
+    path: "/chat",
+    element: <ChatPlaceholder />,
+    roles: ['owner', 'client', 'driver']
+} 
+>>>>>>> v2.0-development

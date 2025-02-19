@@ -26,8 +26,17 @@ app.use(express.json());
 app.use(bodyParser.json());
 
 // Basic routes first
-app.get('/api', (req, res) => {
+app.get('/', (req, res) => {
     logger.info('Root endpoint hit');
+    res.json({ 
+        message: 'Fuel Delivery API is running',
+        environment: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+    });
+});
+
+app.get('/api', (req, res) => {
+    logger.info('API root endpoint hit');
     res.json({ 
         message: 'Fuel Delivery API is running',
         environment: process.env.NODE_ENV,
@@ -59,11 +68,11 @@ app.use('/api/user', userRoutes);
 
 // 404 handler
 app.use((req, res) => {
-    logger.warn(`Route not found: ${req.method} ${req.originalUrl}`);
+    logger.info(`404 - Route not found: ${req.method} ${req.originalUrl}`);
     res.status(404).json({
-        status: 'error',
+        success: false,
         message: 'Route not found',
-        path: req.originalUrl
+        requestedPath: req.originalUrl
     });
 });
 

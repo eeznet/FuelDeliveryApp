@@ -1,20 +1,12 @@
 import winston from 'winston';
 const { createLogger, format, transports } = winston;
 
-// Create the logger
+// Create a simpler logger for testing
 const logger = createLogger({
-    level: 'info',
-    format: format.combine(
-        format.timestamp(),
-        format.json()
-    ),
+    level: 'debug',
+    format: format.simple(),
     transports: [
-        new transports.Console({
-            format: format.combine(
-                format.colorize(),
-                format.simple()
-            )
-        })
+        new transports.Console()
     ]
 });
 

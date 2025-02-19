@@ -4,27 +4,29 @@ import logger from "./logger.mjs";
 
 dotenv.config();
 
-const corsOptions = {
-    origin: true, // Allow all origins temporarily for debugging
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    exposedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false
-};
+const corsMiddleware = [
+    // First middleware to handle CORS preflight
+    (req, res, next) => {
+        res.header('Access-Control-Allow-Origin', 'https://fueldeliveryapp-1.onrender.com');
+        res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+        res.header('Access-Control-Allow-Credentials', 'false');
 
-// Add explicit CORS headers middleware
-const addCorsHeaders = (req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'https://fueldeliveryapp-1.onrender.com');
-    res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+        // Handle preflight
+        if (req.method === 'OPTIONS') {
+            logger.info('Handling OPTIONS request');
+            return res.sendStatus(200);
+        }
+        next();
+    },
     
-    // Handle preflight
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
-};
-
-const corsMiddleware = [cors(corsOptions), addCorsHeaders];
+    // Then the cors package
+    cors({
+        origin: 'https://fueldeliveryapp-1.onrender.com',
+        methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+        credentials: false
+    })
+];
 
 export { corsMiddleware };

@@ -10,48 +10,40 @@ const api = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
-    withCredentials: false
+    withCredentials: false,
+    timeout: 10000 // Add timeout
 });
 
-// Add request logging
+// Simplified request interceptor
 api.interceptors.request.use(
     (config) => {
-        console.log('Request:', {
-            url: config.url,
-            method: config.method,
-            headers: config.headers,
-            data: config.data
-        });
+        console.log(`Making ${config.method.toUpperCase()} request to ${config.url}`);
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => {
-        console.error('Request error:', error);
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
-// Add response logging
+// Simplified response interceptor
 api.interceptors.response.use(
-    (response) => {
-        console.log('Response:', response.data);
-        return response.data;
-    },
+    (response) => response.data,
     (error) => {
-        console.error('Response error:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status
-        });
-        
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
+        if (error.response) {
+            // Server responded with error
+            console.error('Server error:', error.response.data);
+            return Promise.reject(error.response.data);
+        } else if (error.request) {
+            // Request made but no response
+            console.error('Network error - no response');
+            return Promise.reject({ message: 'Network error - please try again' });
+        } else {
+            // Request setup failed
+            console.error('Request failed:', error.message);
+            return Promise.reject({ message: 'Request failed - please try again' });
         }
-        return Promise.reject(error);
     }
 );
 

@@ -25,8 +25,20 @@ app.use(corsMiddleware);
 app.use(express.json());
 app.use(bodyParser.json());
 
+// Add at the top after imports
+const DEBUG = true;
+
+// Add before routes
+if (DEBUG) {
+    app.use((req, res, next) => {
+        console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+        next();
+    });
+}
+
 // API Routes - must be before static files
 app.get('/api', (req, res) => {
+    console.log('API endpoint hit');
     res.json({ 
         success: true,
         message: 'Fuel Delivery API is running',
@@ -35,6 +47,7 @@ app.get('/api', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
+    console.log('Health endpoint hit');
     res.json({
         success: true,
         status: 'ok',
@@ -51,6 +64,7 @@ app.use('/api/user', userRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('*', (req, res) => {
+    console.log(`404 - ${req.method} ${req.url}`);
     if (req.accepts('html')) {
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     } else {
@@ -61,6 +75,16 @@ app.get('*', (req, res) => {
         });
     }
 });
+
+// Add after route registration
+if (DEBUG) {
+    console.log('Registered routes:');
+    app._router.stack.forEach(r => {
+        if (r.route && r.route.path) {
+            console.log(`${Object.keys(r.route.methods)} ${r.route.path}`);
+        }
+    });
+}
 
 // Error handler
 app.use((err, req, res, next) => {

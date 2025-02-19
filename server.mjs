@@ -18,7 +18,7 @@ dotenv.config();
 
 const app = express();
 
-// Health check MUST be before any middleware
+// IMPORTANT: Health check route MUST be defined BEFORE any middleware
 app.get('/health', (req, res) => {
     logger.info('✅ Health check endpoint hit');
     res.status(200).json({
@@ -28,7 +28,7 @@ app.get('/health', (req, res) => {
     });
 });
 
-// CORS and other middleware after health check
+// Now add middleware
 app.use(corsMiddleware);
 app.use(express.json());
 app.use(bodyParser.json());

@@ -50,12 +50,12 @@ router.get('/', (req, res) => {
     });
 });
 
-router.get('/health', (req, res) => {
-    console.log('✅ Health endpoint hit');
+app.get('/health', (req, res) => {
+    logger.info('✅ Root health check endpoint hit');
     res.json({
-        success: true,
         status: 'ok',
-        environment: process.env.NODE_ENV
+        message: 'Server is healthy',
+        timestamp: new Date().toISOString()
     });
 });
 

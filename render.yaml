@@ -17,17 +17,15 @@ services:
   - type: web
     name: fuel-delivery-backend
     env: node
-    region: oregon
-    plan: free
     buildCommand: npm install
     startCommand: node server.mjs
     envVars:
       - key: NODE_ENV
         value: production
-      - key: CORS_ORIGIN
-        value: https://fueldeliveryapp-1.onrender.com
       - key: PORT
         value: 10000
+      - key: FRONTEND_URL
+        value: https://fueldeliveryapp-1.onrender.com
       - key: JWT_SECRET
         generateValue: true
       - key: MONGO_URI

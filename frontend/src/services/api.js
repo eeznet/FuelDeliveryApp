@@ -3,9 +3,10 @@ import axios from 'axios';
 const api = axios.create({
     baseURL: 'https://fuel-delivery-backend.onrender.com/api',
     headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
     },
-    withCredentials: true
+    withCredentials: false
 });
 
 // Request interceptor

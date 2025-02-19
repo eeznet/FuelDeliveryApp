@@ -5,12 +5,11 @@ import logger from "./logger.mjs";
 dotenv.config();
 
 const corsOptions = {
-    origin: '*', // Temporarily allow all origins for testing
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    origin: 'https://fueldeliveryapp-1.onrender.com',  // Set specific origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204
+    optionsSuccessStatus: 200
 };
 
 const corsMiddleware = cors(corsOptions);

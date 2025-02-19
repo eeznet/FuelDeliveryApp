@@ -13,11 +13,11 @@ const api = axios.create({
     withCredentials: false
 });
 
-// Request interceptor with more detailed logging
+// Add request logging
 api.interceptors.request.use(
     (config) => {
-        console.log('Outgoing Request:', {
-            url: `${config.baseURL}${config.url}`,
+        console.log('Request:', {
+            url: config.url,
             method: config.method,
             headers: config.headers,
             data: config.data
@@ -29,7 +29,28 @@ api.interceptors.request.use(
         return config;
     },
     (error) => {
-        console.error('Request Configuration Error:', error);
+        console.error('Request error:', error);
+        return Promise.reject(error);
+    }
+);
+
+// Add response logging
+api.interceptors.response.use(
+    (response) => {
+        console.log('Response:', response.data);
+        return response.data;
+    },
+    (error) => {
+        console.error('Response error:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        });
+        
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
         return Promise.reject(error);
     }
 );
@@ -47,35 +68,6 @@ api.interceptors.response.use(null, async (error) => {
     }
     return Promise.reject(error);
 });
-
-// Response interceptor with better error handling
-api.interceptors.response.use(
-    (response) => {
-        console.log('Response received:', {
-            status: response.status,
-            data: response.data
-        });
-        return response.data;
-    },
-    (error) => {
-        console.error('API Error Details:', {
-            message: error.message,
-            status: error.response?.status,
-            data: error.response?.data,
-            config: {
-                url: error.config?.url,
-                method: error.config?.method,
-                headers: error.config?.headers
-            }
-        });
-        
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-        }
-        return Promise.reject(error.response?.data || error);
-    }
-);
 
 export const auth = {
     login: async (credentials) => {

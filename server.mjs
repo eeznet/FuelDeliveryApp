@@ -9,7 +9,7 @@ import pool from './config/database.mjs';
 import authRoutes from './routes/authRoutes.mjs';
 import invoiceRoutes from './routes/invoiceRoutes.mjs';
 import userRoutes from './routes/userRoutes.mjs';
-import { corsMiddleware, handleOptions } from './config/corsMiddleware.mjs';
+import { corsMiddleware } from './config/corsMiddleware.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,9 +22,6 @@ let server;
 
 // CORS must be first
 app.use(corsMiddleware);
-
-// Handle OPTIONS requests
-app.options('*', handleOptions);
 
 // Then other middleware
 app.use(express.json());
@@ -85,7 +82,14 @@ connectDatabases();
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok' });
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        cors: {
+            origin: req.headers.origin,
+            method: req.method
+        }
+    });
 });
 
 // Add a root endpoint for basic connectivity test
@@ -96,7 +100,17 @@ app.get('/', (req, res) => {
 // Routes with logging
 logger.info('Setting up routes...');
 
-// Mount routes directly
+// Test endpoint first
+app.get('/api/test', (req, res) => {
+    logger.info('Test endpoint hit');
+    res.json({ 
+        message: 'API is accessible',
+        headers: req.headers,
+        origin: req.headers.origin 
+    });
+});
+
+// Then other routes
 app.use('/api/auth', authRoutes);
 app.use('/api/invoice', invoiceRoutes);
 app.use('/api/user', userRoutes);
@@ -114,16 +128,6 @@ app.use((req, res, next) => {
             }))
     });
     next();
-});
-
-// Move this BEFORE the 404 handler
-app.get('/api/test', (req, res) => {
-    logger.info('Test endpoint hit');
-    res.json({ 
-        message: 'API is accessible',
-        headers: req.headers,
-        origin: req.headers.origin 
-    });
 });
 
 // 404 handler comes after

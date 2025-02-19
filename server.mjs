@@ -16,24 +16,28 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
-// Initialize express FIRST
 const app = express();
 
-// CRITICAL: Health check route must be absolute first, before anything else
-app.get('/health', (req, res) => {
-    res.status(200).send('ok'); // Simplest possible response
-});
+// Initialize router once
+const router = express.Router();
 
-// Initialize logger AFTER health check
-import logger from './config/logger.mjs';
-
-// Now we can use logger for all other routes
-app.get('/health-detailed', (req, res) => {
+// Health check route under /api/health
+router.get('/health', (req, res) => {
     logger.info('✅ Health check endpoint hit');
     res.status(200).json({
         status: 'ok',
         message: 'Server is healthy',
         timestamp: new Date().toISOString()
+    });
+});
+
+// API root endpoint
+router.get('/', (req, res) => {
+    console.log('✅ API root endpoint hit');
+    res.json({ 
+        success: true,
+        message: 'Fuel Delivery API is running',
+        environment: process.env.NODE_ENV
     });
 });
 
@@ -54,18 +58,6 @@ if (DEBUG) {
         next();
     });
 }
-
-// Register routes AFTER health check but BEFORE catch-all
-const router = express.Router();
-
-router.get('/', (req, res) => {
-    console.log('✅ API root endpoint hit');
-    res.json({ 
-        success: true,
-        message: 'Fuel Delivery API is running',
-        environment: process.env.NODE_ENV
-    });
-});
 
 // Mount API routes
 app.use('/api', router);

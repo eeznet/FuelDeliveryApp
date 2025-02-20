@@ -1,10 +1,14 @@
 import axios from 'axios';
 
+// Use environment variables for API URL
 const API_URL = import.meta.env.PROD 
     ? 'https://fueldeliverywebapp.onrender.com/api'
     : 'http://localhost:3000/api';
 
-console.log('API URL:', API_URL); // Debug log
+console.log('API URL Configuration:', {
+    env: import.meta.env.MODE,
+    url: API_URL
+});
 
 const api = axios.create({
     baseURL: API_URL,
@@ -12,10 +16,11 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
-    }
+    },
+    timeout: 10000
 });
 
-// Request interceptor with better logging
+// Request interceptor with detailed logging
 api.interceptors.request.use(
     (config) => {
         console.log('Making request:', {
@@ -48,7 +53,8 @@ api.interceptors.response.use(
             data: error.response?.data,
             config: {
                 url: error.config?.url,
-                method: error.config?.method
+                method: error.config?.method,
+                baseURL: error.config?.baseURL
             }
         });
         return Promise.reject(error.response?.data || error);
@@ -69,14 +75,12 @@ api.interceptors.response.use(null, async (error) => {
     return Promise.reject(error);
 });
 
-// Export the configured API instance
-export default api;
-
-// Auth endpoints with detailed error handling
+// Export API endpoints
 export const auth = {
     login: (credentials) => api.post('/auth/login', credentials),
     register: (userData) => api.post('/auth/register', userData),
-    logout: () => api.post('/auth/logout')
+    logout: () => api.post('/auth/logout'),
+    getProfile: () => api.get('/auth/me')
 };
 
 export const user = {
@@ -100,4 +104,6 @@ export const admin = {
 export const owner = {
     getStats: () => api.get('/owner/stats'),
     updatePrice: (price) => api.post('/price', { pricePerLiter: price })
-}; 
+};
+
+export default api; 

@@ -1,29 +1,55 @@
 import axios from 'axios';
 import { apiConfig } from '../config/api';
 
-const api = axios.create(apiConfig);
+// Debug: Log the API configuration
+console.log('API Config:', apiConfig);
 
-// Request interceptor
+const api = axios.create({
+    ...apiConfig,
+    // Force specific headers for debugging
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+});
+
+// Request interceptor with detailed logging
 api.interceptors.request.use(
     (config) => {
-        console.log(`Making ${config.method.toUpperCase()} request to ${config.url}`);
+        console.log('Making request:', {
+            url: config.url,
+            method: config.method,
+            headers: config.headers,
+            data: config.data
+        });
         const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => Promise.reject(error)
+    (error) => {
+        console.error('Request error:', error);
+        return Promise.reject(error);
+    }
 );
 
-// Response interceptor
+// Response interceptor with detailed error logging
 api.interceptors.response.use(
-    (response) => response.data,
+    (response) => {
+        console.log('Response received:', {
+            status: response.status,
+            data: response.data,
+            headers: response.headers
+        });
+        return response.data;
+    },
     (error) => {
-        console.error('API Error:', {
+        console.error('Response error:', {
             message: error.message,
-            response: error.response,
+            response: error.response?.data,
             status: error.response?.status,
+            headers: error.response?.headers,
             config: error.config
         });
         return Promise.reject(error.response?.data || error);
@@ -44,8 +70,22 @@ api.interceptors.response.use(null, async (error) => {
     return Promise.reject(error);
 });
 
+// Export the configured API instance
+export default api;
+
+// Auth endpoints with detailed error handling
 export const auth = {
-    login: (credentials) => api.post('/auth/login', credentials),
+    login: async (credentials) => {
+        try {
+            console.log('Login attempt:', credentials);
+            const response = await api.post('/auth/login', credentials);
+            console.log('Login response:', response);
+            return response;
+        } catch (error) {
+            console.error('Login failed:', error);
+            throw error;
+        }
+    },
     register: (userData) => api.post('/auth/register', userData),
     logout: () => api.post('/auth/logout'),
     getProfile: () => api.get('/auth/me')
@@ -72,6 +112,4 @@ export const admin = {
 export const owner = {
     getStats: () => api.get('/owner/stats'),
     updatePrice: (price) => api.post('/price', { pricePerLiter: price })
-};
-
-export default api; 
+}; 

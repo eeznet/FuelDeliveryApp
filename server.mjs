@@ -42,7 +42,31 @@ app.get('/api', (req, res) => {
     });
 });
 
-// Apply CORS middleware before routes
+// Add this before your routes
+app.use((req, res, next) => {
+    // Log incoming requests for debugging
+    console.log('Incoming request:', {
+        method: req.method,
+        url: req.url,
+        headers: req.headers,
+        body: req.body
+    });
+
+    // Set CORS headers
+    res.header("Access-Control-Allow-Origin", "https://fueldeliveryapp-1.onrender.com");
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Allow-Credentials", "true");
+
+    // Handle preflight
+    if (req.method === "OPTIONS") {
+        console.log('Handling OPTIONS request');
+        return res.sendStatus(200);
+    }
+    next();
+});
+
+// Then your existing CORS middleware
 app.use(...corsMiddleware);
 
 // Regular middleware

@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from 'mongoose';
 import logger from './config/logger.mjs';
-import pool from './config/database.mjs';
+import { default as pool, testConnection } from './config/database.mjs';
 import authRoutes from './routes/authRoutes.mjs';
 import invoiceRoutes from './routes/invoiceRoutes.mjs';
 import userRoutes from './routes/userRoutes.mjs';
@@ -188,10 +188,11 @@ const connectDB = async () => {
         // Connect to MongoDB
         await connectMongoDB();
         
-        // Connect to PostgreSQL
-        const client = await pool.connect();
-        logger.info('✅ PostgreSQL connected');
-        client.release();
+        // Test PostgreSQL connection
+        const pgConnected = await testConnection();
+        if (!pgConnected) {
+            throw new Error('PostgreSQL connection failed');
+        }
         
         logger.info('✅ All database connections established');
     } catch (error) {

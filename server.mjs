@@ -65,8 +65,8 @@ if (DEBUG) {
 // Then mount other routes
 app.use('/api', router);
 app.use('/api/auth', authRoutes);
-app.use('/api/invoice', invoiceRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/invoice', invoiceRoutes);
 
 // Static files after API routes
 app.use(express.static(path.join(__dirname, 'public')));

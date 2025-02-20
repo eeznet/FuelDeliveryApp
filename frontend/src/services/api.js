@@ -21,9 +21,16 @@ const api = axios.create({
     timeout: 10000
 });
 
-// Request interceptor with detailed logging
+// Add token management
+const getStoredToken = () => localStorage.getItem('token');
+
+// Update request interceptor
 api.interceptors.request.use(
     (config) => {
+        const token = getStoredToken();
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
         console.log('Making request:', {
             fullUrl: `${config.baseURL}${config.url}`,
             method: config.method,

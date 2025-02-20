@@ -1,37 +1,30 @@
-import cors from "cors";
+import cors from 'cors';
 
 const corsOptions = {
-    origin: 'https://fueldeliveryapp-1.onrender.com', // Single origin for now
+    origin: 'https://fueldeliveryapp-1.onrender.com', // Single frontend origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    exposedHeaders: ['Access-Control-Allow-Origin'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204
+    optionsSuccessStatus: 200
 };
 
-// Create middleware
+// Add logging
 const corsMiddleware = cors(corsOptions);
 
-// Add preflight handler
-const handleCORS = (req, res, next) => {
-    // Log CORS details
+// Wrap with logging
+const corsWithLogging = (req, res, next) => {
     console.log('CORS Request:', {
         origin: req.headers.origin,
-        method: req.method,
-        path: req.path
+        method: req.method
     });
-
-    // Handle preflight
-    if (req.method === 'OPTIONS') {
-        res.header('Access-Control-Allow-Origin', 'https://fueldeliveryapp-1.onrender.com');
-        res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-        res.header('Access-Control-Allow-Credentials', 'true');
-        return res.status(204).send();
-    }
-
-    corsMiddleware(req, res, next);
+    
+    corsMiddleware(req, res, (err) => {
+        if (err) {
+            console.error('CORS Error:', err);
+            return res.status(500).json({ error: 'CORS Error' });
+        }
+        next();
+    });
 };
 
-export default handleCORS;
+export default corsWithLogging;

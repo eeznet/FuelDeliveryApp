@@ -11,6 +11,7 @@ import invoiceRoutes from './routes/invoiceRoutes.mjs';
 import userRoutes from './routes/userRoutes.mjs';
 import cors from "cors";
 import connectMongoDB from './config/mongoose.mjs';
+import corsMiddleware from './config/corsMiddleware.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,85 +33,11 @@ router.get('/health', (req, res) => {
     });
 });
 
-// Define allowed origins once
-const allowedOrigins = [
-    'https://fueldeliveryapp-1.onrender.com',    // Production frontend
-    'https://fuel-delivery-app.onrender.com',    // Alternative frontend URL
-    'http://localhost:5173',                     // Development frontend
-    'http://localhost:3000'                      // Development backend
-];
-
-// Handle OPTIONS requests globally
-app.options("*", (req, res) => {
-    // Log OPTIONS request
-    console.log('Handling OPTIONS request:', {
-        path: req.path,
-        origin: req.headers.origin
-    });
-
-    res.header("Access-Control-Allow-Origin", "https://fueldeliveryapp-1.onrender.com");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, Origin");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.sendStatus(204); // No Content
-});
-
-// Apply CORS middleware
-app.use(cors({
-    origin: function(origin, callback) {
-        console.log('CORS Request from origin:', origin);
-        
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) {
-            return callback(null, true);
-        }
-
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-
-        console.log('CORS blocked for origin:', origin);
-        return callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    exposedHeaders: ['Access-Control-Allow-Origin']
-}));
-
-// Debug middleware
-app.use((req, res, next) => {
-    console.log('Request:', {
-        method: req.method,
-        path: req.path,
-        origin: req.headers.origin,
-        headers: req.headers
-    });
-    next();
-});
-
-// Regular middleware
-app.use(express.json());
-app.use(bodyParser.json());
-
-// Add at the top after imports
-const DEBUG = true;
-
-// Debug logging
-if (DEBUG) {
-    app.use((req, res, next) => {
-        console.log('--------------------');
-        console.log(`REQUEST: ${req.method} ${req.url}`);
-        console.log('Headers:', JSON.stringify(req.headers, null, 2));
-        next();
-    });
-}
-
-// Mount routes with proper prefixes - keep this order
-app.use('/api/auth', authRoutes);      // Auth routes first
-app.use('/api/user', userRoutes);      // Then user routes
-app.use('/api/invoice', invoiceRoutes); // Then invoice routes
-app.use('/api', router);               // Base router last
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/invoice', invoiceRoutes);
+app.use('/api', router);
 
 // Static files after API routes
 app.use(express.static(path.join(__dirname, 'public')));
@@ -237,5 +164,12 @@ app.get('/api/health', async (req, res) => {
         });
     }
 });
+
+// Apply CORS first, before any routes
+app.use(corsMiddleware);
+
+// Regular middleware
+app.use(express.json());
+app.use(bodyParser.json());
 
 export default app;

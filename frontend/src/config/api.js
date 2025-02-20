@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = import.meta.env.PROD 
+    ? 'https://fueldeliverywebapp.onrender.com/api'
+    : 'http://localhost:3000/api';
 const WS_URL = import.meta.env.VITE_WS_URL;
 
 if (!API_BASE_URL) {
@@ -12,6 +14,14 @@ export const endpoints = {
         me: `${API_BASE_URL}/auth/me`,
     },
     // ... rest of endpoints
+};
+
+export const apiConfig = {
+    baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    withCredentials: true
 };
 
 export const wsConfig = {

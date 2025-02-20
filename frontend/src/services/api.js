@@ -1,20 +1,7 @@
 import axios from 'axios';
+import { apiConfig } from '../config/api';
 
-const BASE_URL = process.env.NODE_ENV === 'production'
-    ? 'https://fueldeliverywebapp.onrender.com/api'
-    : 'http://localhost:3000/api';
-
-console.log('API Base URL:', BASE_URL);
-
-const api = axios.create({
-    baseURL: BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    },
-    withCredentials: true,
-    timeout: 10000
-});
+const api = axios.create(apiConfig);
 
 // Simplified request interceptor
 api.interceptors.request.use(

@@ -34,9 +34,10 @@ router.get('/health', (req, res) => {
 // Force CORS headers manually first
 app.use((req, res, next) => {
     const allowedOrigins = [
-        'https://fueldeliveryapp-1.onrender.com',  // Production frontend
-        'http://localhost:5173',                   // Development frontend
-        'http://localhost:3000'                    // Development backend
+        'https://fueldeliveryapp-1.onrender.com',    // Production frontend
+        'https://fuel-delivery-app.onrender.com',    // Alternative frontend URL
+        'http://localhost:5173',                     // Development frontend
+        'http://localhost:3000'                      // Development backend
     ];
     const origin = req.headers.origin;
     
@@ -46,6 +47,14 @@ app.use((req, res, next) => {
         res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     }
+
+    // Log CORS configuration
+    console.log('CORS Request:', {
+        origin: req.headers.origin,
+        method: req.method,
+        allowedOrigins,
+        corsEnabled: allowedOrigins.includes(origin)
+    });
 
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);

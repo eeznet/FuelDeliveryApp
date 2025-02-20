@@ -2,12 +2,13 @@ import axios from 'axios';
 
 // Use environment variables for API URL
 const API_URL = import.meta.env.PROD 
-    ? 'https://fueldeliverywebapp.onrender.com/api'
+    ? 'https://fuel-delivery-backend.onrender.com/api'
     : 'http://localhost:3000/api';
 
 console.log('API URL Configuration:', {
     env: import.meta.env.MODE,
-    url: API_URL
+    url: API_URL,
+    baseURL: API_URL
 });
 
 const api = axios.create({

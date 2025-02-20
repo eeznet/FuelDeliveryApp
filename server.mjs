@@ -31,54 +31,35 @@ router.get('/health', (req, res) => {
     });
 });
 
-// Force CORS headers manually first
-app.use((req, res, next) => {
-    const allowedOrigins = [
-        'https://fueldeliveryapp-1.onrender.com',    // Production frontend
-        'https://fuel-delivery-app.onrender.com',    // Alternative frontend URL
-        'http://localhost:5173',                     // Development frontend
-        'http://localhost:3000'                      // Development backend
-    ];
-    const origin = req.headers.origin;
-    
-    if (allowedOrigins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    }
+// Define allowed origins once
+const allowedOrigins = [
+    'https://fueldeliveryapp-1.onrender.com',    // Production frontend
+    'https://fuel-delivery-app.onrender.com',    // Alternative frontend URL
+    'http://localhost:5173',                     // Development frontend
+    'http://localhost:3000'                      // Development backend
+];
 
-    // Log CORS configuration
-    console.log('CORS Request:', {
-        origin: req.headers.origin,
-        method: req.method,
-        allowedOrigins,
-        corsEnabled: allowedOrigins.includes(origin)
-    });
-
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
-});
-
-// Then use cors middleware
+// Single CORS configuration
 app.use(cors({
     origin: function(origin, callback) {
-        const allowedOrigins = [
-            'https://fueldeliveryapp-1.onrender.com',  // Production frontend
-            'http://localhost:5173',                   // Development frontend
-            'http://localhost:3000'                    // Development backend
-        ];
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
+        console.log('CORS Request from origin:', origin);
+        
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) {
+            return callback(null, true);
         }
+
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        console.log('CORS blocked for origin:', origin);
+        return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Access-Control-Allow-Origin']
 }));
 
 // Regular middleware
@@ -97,6 +78,17 @@ if (DEBUG) {
         next();
     });
 }
+
+// Debug middleware
+app.use((req, res, next) => {
+    console.log('Request:', {
+        method: req.method,
+        url: req.url,
+        origin: req.headers.origin,
+        headers: req.headers
+    });
+    next();
+});
 
 // Mount routes with proper prefixes - keep this order
 app.use('/api/auth', authRoutes);      // Auth routes first

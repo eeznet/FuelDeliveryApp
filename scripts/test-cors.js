@@ -1,26 +1,39 @@
 import axios from 'axios';
 
-const testCORS = async () => {
+const testEndpoint = 'https://fueldeliverywebapp.onrender.com/api/auth/login';
+const testOrigin = 'https://fueldeliveryapp-1.onrender.com';
+
+async function testCORS() {
     try {
-        // Test preflight
-        const options = await axios.options('https://fuel-delivery-backend.onrender.com/api/auth/login', {
+        // Test OPTIONS (preflight)
+        console.log('Testing OPTIONS request...');
+        const options = await axios({
+            method: 'OPTIONS',
+            url: testEndpoint,
             headers: {
-                'Origin': 'https://fueldeliveryapp-1.onrender.com'
+                'Origin': testOrigin,
+                'Access-Control-Request-Method': 'POST',
+                'Access-Control-Request-Headers': 'Content-Type,Authorization'
             }
         });
-        console.log('Preflight response headers:', options.headers);
+        console.log('OPTIONS success:', options.headers);
 
-        // Test actual request
-        const response = await axios.post('https://fuel-delivery-backend.onrender.com/api/auth/login', 
-            { email: 'test@example.com', password: 'password' },
-            {
-                headers: {
-                    'Origin': 'https://fueldeliveryapp-1.onrender.com',
-                    'Content-Type': 'application/json'
-                }
+        // Test actual login
+        console.log('\nTesting POST request...');
+        const login = await axios({
+            method: 'POST',
+            url: testEndpoint,
+            headers: {
+                'Origin': testOrigin,
+                'Content-Type': 'application/json'
+            },
+            data: {
+                email: 'test@example.com',
+                password: 'password123'
             }
-        );
-        console.log('Request successful:', response.data);
+        });
+        console.log('POST success:', login.data);
+
     } catch (error) {
         console.error('Test failed:', {
             message: error.message,
@@ -28,6 +41,6 @@ const testCORS = async () => {
             headers: error.response?.headers
         });
     }
-};
+}
 
 testCORS(); 

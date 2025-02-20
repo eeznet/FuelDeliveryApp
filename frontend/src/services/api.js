@@ -1,19 +1,21 @@
 import axios from 'axios';
-import { apiConfig } from '../config/api';
 
-// Debug: Log the API configuration
-console.log('API Config:', apiConfig);
+const API_URL = import.meta.env.PROD 
+    ? 'https://fueldeliverywebapp.onrender.com/api'
+    : 'http://localhost:3000/api';
+
+console.log('API URL:', API_URL); // Debug log
 
 const api = axios.create({
-    ...apiConfig,
-    // Force specific headers for debugging
+    baseURL: API_URL,
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     }
 });
 
-// Request interceptor with detailed logging
+// Request interceptor
 api.interceptors.request.use(
     (config) => {
         console.log('Making request:', {
@@ -22,10 +24,6 @@ api.interceptors.request.use(
             headers: config.headers,
             data: config.data
         });
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
         return config;
     },
     (error) => {
@@ -34,23 +32,17 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor with detailed error logging
+// Response interceptor
 api.interceptors.response.use(
     (response) => {
-        console.log('Response received:', {
-            status: response.status,
-            data: response.data,
-            headers: response.headers
-        });
+        console.log('Response:', response.data);
         return response.data;
     },
     (error) => {
         console.error('Response error:', {
             message: error.message,
             response: error.response?.data,
-            status: error.response?.status,
-            headers: error.response?.headers,
-            config: error.config
+            status: error.response?.status
         });
         return Promise.reject(error.response?.data || error);
     }
@@ -75,20 +67,9 @@ export default api;
 
 // Auth endpoints with detailed error handling
 export const auth = {
-    login: async (credentials) => {
-        try {
-            console.log('Login attempt:', credentials);
-            const response = await api.post('/auth/login', credentials);
-            console.log('Login response:', response);
-            return response;
-        } catch (error) {
-            console.error('Login failed:', error);
-            throw error;
-        }
-    },
+    login: (credentials) => api.post('/auth/login', credentials),
     register: (userData) => api.post('/auth/register', userData),
-    logout: () => api.post('/auth/logout'),
-    getProfile: () => api.get('/auth/me')
+    logout: () => api.post('/auth/logout')
 };
 
 export const user = {

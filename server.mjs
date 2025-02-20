@@ -9,7 +9,7 @@ import pool from './config/database.mjs';
 import authRoutes from './routes/authRoutes.mjs';
 import invoiceRoutes from './routes/invoiceRoutes.mjs';
 import userRoutes from './routes/userRoutes.mjs';
-import { corsMiddleware } from './config/corsMiddleware.mjs';
+import cors from "cors";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,32 +42,46 @@ app.get('/api', (req, res) => {
     });
 });
 
-// Add this before your routes
+// Force CORS headers manually first
 app.use((req, res, next) => {
-    // Log incoming requests for debugging
-    console.log('Incoming request:', {
-        method: req.method,
-        url: req.url,
-        headers: req.headers,
-        body: req.body
-    });
+    const allowedOrigins = [
+        'https://fueldeliveryapp-1.onrender.com',
+        'http://localhost:5173',
+        'http://localhost:3000'
+    ];
+    const origin = req.headers.origin;
+    
+    if (allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    }
 
-    // Set CORS headers
-    res.header("Access-Control-Allow-Origin", "https://fueldeliveryapp-1.onrender.com");
-    res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    res.header("Access-Control-Allow-Credentials", "true");
-
-    // Handle preflight
-    if (req.method === "OPTIONS") {
-        console.log('Handling OPTIONS request');
+    if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
     next();
 });
 
-// Then your existing CORS middleware
-app.use(...corsMiddleware);
+// Then use cors middleware
+app.use(cors({
+    origin: function(origin, callback) {
+        const allowedOrigins = [
+            'https://fueldeliveryapp-1.onrender.com',
+            'http://localhost:5173',
+            'http://localhost:3000'
+        ];
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Regular middleware
 app.use(express.json());

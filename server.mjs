@@ -31,7 +31,7 @@ router.get('/health', (req, res) => {
     });
 });
 
-// API root endpoint
+// Move this before other route definitions
 app.get('/api', (req, res) => {
     logger.info('✅ API root endpoint hit');
     res.json({ 
@@ -43,7 +43,12 @@ app.get('/api', (req, res) => {
 });
 
 // Regular middleware
-app.use(corsMiddleware);
+app.use(corsMiddleware({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(bodyParser.json());
 
@@ -94,11 +99,19 @@ app._router.stack.forEach((middleware) => {
 });
 console.log('========================');
 
-// Error handler
+// Add after all route definitions
+app.use((req, res, next) => {
+    res.status(404).json({
+        success: false,
+        message: 'Route not found',
+        requestedPath: req.path
+    });
+});
+
 app.use((err, req, res, next) => {
-    logger.error('Server error:', err);
+    logger.error('Unhandled error:', err);
     res.status(500).json({
-        status: 'error',
+        success: false,
         message: 'Internal server error'
     });
 });
@@ -145,5 +158,31 @@ if (process.env.NODE_ENV !== 'test') {
         await connectDB();
     });
 }
+
+// Add health check endpoint
+app.get('/api/health', async (req, res) => {
+    try {
+        // Check PostgreSQL
+        const pgResult = await pool.query('SELECT NOW()');
+        
+        // Check MongoDB
+        const mongoStatus = mongoose.connection.readyState === 1;
+
+        res.json({
+            status: 'ok',
+            timestamp: new Date().toISOString(),
+            databases: {
+                postgres: pgResult ? 'connected' : 'disconnected',
+                mongodb: mongoStatus ? 'connected' : 'disconnected'
+            }
+        });
+    } catch (error) {
+        logger.error('Health check failed:', error);
+        res.status(500).json({
+            status: 'error',
+            message: error.message
+        });
+    }
+});
 
 export default app;

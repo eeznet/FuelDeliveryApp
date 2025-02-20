@@ -7,7 +7,7 @@ const router = express.Router();
 
 // Log middleware for invoice routes
 router.use((req, res, next) => {
-    logger.info('Invoice route middleware:', {
+    logger.info('Invoice route accessed:', {
         method: req.method,
         path: req.path
     });
@@ -59,63 +59,61 @@ router.post('/', auth, checkRole(['client']), async (req, res) => {
             invoiceId: invoiceResult.rows[0].id
         });
     } catch (error) {
-        await client.query('ROLLBACK');
         logger.error('Error creating invoice:', error);
         res.status(500).json({ 
             success: false, 
-            message: error.message || 'Failed to create order' 
+            message: 'Failed to create invoice' 
         });
     } finally {
         client.release();
     }
 });
 
-// Get client's invoices
-router.get('/client', auth, checkRole(['client']), async (req, res) => {
-    logger.info('Handling GET /client request');
+// Get all invoices
+router.get('/', auth, async (req, res) => {
     try {
-        const result = await pool.query(
-            `SELECT i.*, d.status as delivery_status 
+        const result = await pool.query(`
+            SELECT i.*, u.name as client_name 
             FROM invoices i 
-            LEFT JOIN deliveries d ON i.id = d.invoice_id 
-            WHERE i.client_id = $1 
-            ORDER BY i.created_at DESC`,
-            [req.user.id]
-        );
+            LEFT JOIN users u ON i.client_id = u.id 
+            ORDER BY i.created_at DESC
+        `);
         
         res.json({
             success: true,
             invoices: result.rows
         });
     } catch (error) {
-        logger.error('Error fetching client invoices:', error);
+        logger.error('Error fetching invoices:', error);
         res.status(500).json({ 
             success: false, 
-            message: 'Failed to fetch orders' 
+            message: 'Failed to fetch invoices' 
         });
     }
 });
 
-// Get all invoices (admin/owner only)
-router.get('/all', auth, checkRole(['admin', 'owner']), async (req, res) => {
+// Add detailed health check response
+router.get('/health', async (req, res) => {
     try {
-        const result = await pool.query(
-            `SELECT i.*, u.name as client_name, d.status as delivery_status 
-            FROM invoices i 
-            LEFT JOIN users u ON i.client_id = u.id 
-            LEFT JOIN deliveries d ON i.id = d.invoice_id 
-            ORDER BY i.created_at DESC`
-        );
+        // Test invoice table access
+        const result = await pool.query('SELECT COUNT(*) FROM invoices');
         
         res.json({
-            success: true,
-            invoices: result.rows
+            status: 'ok',
+            timestamp: new Date().toISOString(),
+            details: {
+                invoices: {
+                    count: parseInt(result.rows[0].count),
+                    status: 'connected'
+                }
+            }
         });
     } catch (error) {
-        logger.error('Error fetching all invoices:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to fetch invoices' 
+        logger.error('Invoice health check failed:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Invoice service unhealthy',
+            timestamp: new Date().toISOString()
         });
     }
 });

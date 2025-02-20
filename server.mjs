@@ -32,12 +32,13 @@ router.get('/health', (req, res) => {
 });
 
 // API root endpoint
-router.get('/', (req, res) => {
-    console.log('✅ API root endpoint hit');
+app.get('/api', (req, res) => {
+    logger.info('✅ API root endpoint hit');
     res.json({ 
         success: true,
         message: 'Fuel Delivery API is running',
-        environment: process.env.NODE_ENV
+        environment: process.env.NODE_ENV,
+        version: '1.0.0'
     });
 });
 
@@ -59,7 +60,7 @@ if (DEBUG) {
     });
 }
 
-// Mount API routes
+// Then mount other routes
 app.use('/api', router);
 app.use('/api/auth', authRoutes);
 app.use('/api/invoice', invoiceRoutes);
@@ -104,15 +105,18 @@ app.use((err, req, res, next) => {
 
 // Update the database connection configuration
 const dbConfig = {
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
+    host: process.env.DB_HOST || 'dpg-cunj0p23esus73ciric0-a',
+    database: process.env.DB_NAME || 'fuel_delivery_db',
+    user: process.env.DB_USER || 'fuel_delivery_user',
     password: process.env.DB_PASSWORD,
-    port: 5432, // PostgreSQL port, not the web server port
+    port: 5432,
     ssl: {
         rejectUnauthorized: false
     }
 };
+
+// Update pool configuration
+pool.options = dbConfig;
 
 // Update the port configuration
 const PORT = process.env.PORT || 3000;

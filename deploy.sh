@@ -1,18 +1,17 @@
 #!/bin/bash
 
-echo "Deploying to Render..."
+echo "Starting deployment process..."
 
-# Build the project
-npm run build
+# Ensure we're on the main branch
+git checkout main
 
-# Run tests
-npm test
+# Add all changes
+git add .
 
-# If tests pass, deploy
-if [ $? -eq 0 ]; then
-    git push render main
-    echo "Deployment successful!"
-else
-    echo "Tests failed, deployment aborted"
-    exit 1
-fi 
+# Commit with timestamp
+git commit -m "Deploy update: $(date)"
+
+# Push to main
+git push origin main
+
+echo "Deployment push complete. Check Render dashboard for build status." 

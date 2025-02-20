@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Use environment variables for API URL
+// Update the API URL configuration
 const API_URL = import.meta.env.PROD 
-    ? 'https://fuel-delivery-backend.onrender.com/api'
+    ? 'https://fueldeliverywebapp.onrender.com/api'
     : 'http://localhost:3000/api';
 
 console.log('API URL Configuration:', {
@@ -15,11 +15,35 @@ const api = axios.create({
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Origin': 'https://fueldeliveryapp-1.onrender.com'
+        'Accept': 'application/json'
     },
     timeout: 10000
 });
+
+// Add request interceptor for debugging
+api.interceptors.request.use(request => {
+    console.log('Making request:', {
+        url: request.url,
+        method: request.method,
+        headers: request.headers
+    });
+    return request;
+});
+
+// Add response interceptor for error handling
+api.interceptors.response.use(
+    response => response,
+    error => {
+        console.error('API Error:', {
+            url: error.config?.url,
+            method: error.config?.method,
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
+        return Promise.reject(error);
+    }
+);
 
 // Add token management
 const getStoredToken = () => localStorage.getItem('token');

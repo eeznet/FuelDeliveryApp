@@ -1,35 +1,28 @@
-import pg from 'pg';
-import dotenv from 'dotenv';
+import { testConnection } from '../config/database.mjs';
+import connectMongoDB from '../config/mongoose.mjs';
+import logger from '../config/logger.mjs';
 
-dotenv.config();
-
-const { Pool } = pg;
-
-const pool = new Pool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
-    ssl: {
-        rejectUnauthorized: false
-    }
-});
-
-async function testConnection() {
+async function testDatabases() {
     try {
-        const client = await pool.connect();
-        console.log('✅ Database connection successful');
+        // Test PostgreSQL
+        logger.info('Testing PostgreSQL connection...');
+        const pgConnected = await testConnection();
         
-        const result = await client.query('SELECT NOW()');
-        console.log('✅ Query successful:', result.rows[0]);
+        // Test MongoDB
+        logger.info('Testing MongoDB connection...');
+        await connectMongoDB();
         
-        client.release();
-        process.exit(0);
+        if (pgConnected) {
+            logger.info('✅ All database connections successful');
+            process.exit(0);
+        } else {
+            logger.error('❌ PostgreSQL connection failed');
+            process.exit(1);
+        }
     } catch (error) {
-        console.error('❌ Database connection failed:', error.message);
+        logger.error('❌ Database test failed:', error);
         process.exit(1);
     }
 }
 
-testConnection(); 
+testDatabases(); 

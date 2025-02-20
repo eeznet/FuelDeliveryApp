@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: fueldeliverywebapp
+    name: fuel-delivery-backend
     env: node
     buildCommand: npm install
     startCommand: node server.mjs

@@ -1,30 +1,31 @@
 import cors from 'cors';
+import logger from './logger.mjs';
+
+const allowedOrigins = [
+    'https://fueldeliveryapp-1.onrender.com',
+    'http://localhost:3000',
+    'http://localhost:3001'
+];
 
 const corsOptions = {
-    origin: 'https://fueldeliveryapp-1.onrender.com', // Single frontend origin
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    optionsSuccessStatus: 200
-};
-
-// Add logging
-const corsMiddleware = cors(corsOptions);
-
-// Wrap with logging
-const corsWithLogging = (req, res, next) => {
-    console.log('CORS Request:', {
-        origin: req.headers.origin,
-        method: req.method
-    });
-    
-    corsMiddleware(req, res, (err) => {
-        if (err) {
-            console.error('CORS Error:', err);
-            return res.status(500).json({ error: 'CORS Error' });
+    origin: function(origin, callback) {
+        logger.info('CORS Request from origin:', origin);
+        
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            logger.error('CORS blocked origin:', origin);
+            callback(new Error('Not allowed by CORS'));
         }
-        next();
-    });
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+    exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+    maxAge: 86400 // 24 hours
 };
 
-export default corsWithLogging;
+export default cors(corsOptions);

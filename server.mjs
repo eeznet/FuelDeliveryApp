@@ -26,7 +26,7 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(corsMiddleware);
 
-// API Routes
+// API Routes - baseRoutes should be first to catch /api/test
 app.use('/api', baseRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);

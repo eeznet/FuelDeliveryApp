@@ -11,17 +11,17 @@ router.get('/test', (req, res) => {
     res.json({
         success: true,
         message: 'API is accessible',
-        timestamp: new Date().toISOString(),
-        cors: {
-            origin: req.headers.origin || 'no origin'
-        }
+        timestamp: new Date().toISOString()
     });
 });
 
 // Health check endpoint
 router.get('/health', async (req, res) => {
     try {
+        // Test PostgreSQL connection
         const pgResult = await pool.query('SELECT NOW()');
+        
+        // Test MongoDB connection
         const mongoStatus = mongoose.connection.readyState === 1;
 
         res.json({
@@ -42,4 +42,4 @@ router.get('/health', async (req, res) => {
     }
 });
 
-export default router; 
+export default router;

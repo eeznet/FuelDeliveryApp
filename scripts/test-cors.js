@@ -18,7 +18,7 @@ async function testCORS() {
         });
         console.log('OPTIONS success:', options.headers);
 
-        // Test actual login
+        // Test actual login with real owner credentials
         console.log('\nTesting POST request...');
         const login = await axios({
             method: 'POST',
@@ -28,8 +28,8 @@ async function testCORS() {
                 'Content-Type': 'application/json'
             },
             data: {
-                email: 'test@example.com',
-                password: 'password123'
+                email: 'moerayblog@gmail.com',    // Use real owner email
+                password: 'admin123'              // Use real owner password
             }
         });
         console.log('POST success:', login.data);

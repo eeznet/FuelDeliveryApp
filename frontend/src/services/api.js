@@ -15,11 +15,11 @@ const api = axios.create({
     }
 });
 
-// Request interceptor
+// Request interceptor with better logging
 api.interceptors.request.use(
     (config) => {
         console.log('Making request:', {
-            url: config.url,
+            fullUrl: `${config.baseURL}${config.url}`,
             method: config.method,
             headers: config.headers,
             data: config.data
@@ -32,17 +32,24 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor
+// Response interceptor with better error handling
 api.interceptors.response.use(
     (response) => {
-        console.log('Response:', response.data);
+        console.log('Response received:', {
+            status: response.status,
+            data: response.data
+        });
         return response.data;
     },
     (error) => {
         console.error('Response error:', {
             message: error.message,
-            response: error.response?.data,
-            status: error.response?.status
+            status: error.response?.status,
+            data: error.response?.data,
+            config: {
+                url: error.config?.url,
+                method: error.config?.method
+            }
         });
         return Promise.reject(error.response?.data || error);
     }

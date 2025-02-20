@@ -61,20 +61,6 @@ api.interceptors.response.use(
     }
 );
 
-// Add axios retry logic
-api.interceptors.response.use(null, async (error) => {
-    if (error.config && error.response && error.response.status === 0) {
-        // Retry the request once
-        try {
-            console.log('Retrying failed request...');
-            return await axios.request(error.config);
-        } catch (retryError) {
-            return Promise.reject(retryError);
-        }
-    }
-    return Promise.reject(error);
-});
-
 // Export API endpoints
 export const auth = {
     login: (credentials) => api.post('/auth/login', credentials),
@@ -106,4 +92,4 @@ export const owner = {
     updatePrice: (price) => api.post('/price', { pricePerLiter: price })
 };
 
-export default api; 
+export default api;

@@ -12,8 +12,8 @@ const api = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     },
-    withCredentials: false,
-    timeout: 10000 // Add timeout
+    withCredentials: true,
+    timeout: 10000
 });
 
 // Simplified request interceptor

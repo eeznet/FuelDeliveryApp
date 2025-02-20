@@ -178,20 +178,33 @@ pool.options = dbConfig;
 // Update the port configuration
 const PORT = process.env.PORT || 3000;
 
+// Update the MongoDB connection configuration
+const MONGODB_URI = process.env.MONGO_URI || 'mongodb+srv://eeznetsolutions:Yp3mmebgxnQHA6XG@fueldelapp.iaiqh.mongodb.net/fuelDeliveryApp?retryWrites=true&w=majority';
+
 // Database connection
 const connectDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI);
+        // Connect to MongoDB with options
+        await mongoose.connect(MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            retryWrites: true,
+            w: 'majority'
+        });
         logger.info('✅ MongoDB connected');
         
+        // Connect to PostgreSQL
         const client = await pool.connect();
         logger.info('✅ PostgreSQL connected');
         client.release();
         
         logger.info('✅ All database connections established');
     } catch (error) {
-        logger.error('Database connection error:', error);
-        process.exit(1);
+        logger.error('❌ Database connection error:', error);
+        // Don't exit process on error in production
+        if (process.env.NODE_ENV !== 'production') {
+            process.exit(1);
+        }
     }
 };
 

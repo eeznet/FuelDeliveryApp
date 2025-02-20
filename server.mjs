@@ -39,7 +39,22 @@ const allowedOrigins = [
     'http://localhost:3000'                      // Development backend
 ];
 
-// Single CORS configuration
+// Handle OPTIONS requests globally
+app.options("*", (req, res) => {
+    // Log OPTIONS request
+    console.log('Handling OPTIONS request:', {
+        path: req.path,
+        origin: req.headers.origin
+    });
+
+    res.header("Access-Control-Allow-Origin", "https://fueldeliveryapp-1.onrender.com");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, Origin");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.sendStatus(204); // No Content
+});
+
+// Apply CORS middleware
 app.use(cors({
     origin: function(origin, callback) {
         console.log('CORS Request from origin:', origin);
@@ -62,6 +77,17 @@ app.use(cors({
     exposedHeaders: ['Access-Control-Allow-Origin']
 }));
 
+// Debug middleware
+app.use((req, res, next) => {
+    console.log('Request:', {
+        method: req.method,
+        path: req.path,
+        origin: req.headers.origin,
+        headers: req.headers
+    });
+    next();
+});
+
 // Regular middleware
 app.use(express.json());
 app.use(bodyParser.json());
@@ -78,17 +104,6 @@ if (DEBUG) {
         next();
     });
 }
-
-// Debug middleware
-app.use((req, res, next) => {
-    console.log('Request:', {
-        method: req.method,
-        url: req.url,
-        origin: req.headers.origin,
-        headers: req.headers
-    });
-    next();
-});
 
 // Mount routes with proper prefixes - keep this order
 app.use('/api/auth', authRoutes);      // Auth routes first

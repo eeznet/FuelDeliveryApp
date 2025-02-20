@@ -3,6 +3,8 @@ const API_BASE_URL = import.meta.env.PROD
     : 'http://localhost:3000/api';
 const WS_URL = import.meta.env.VITE_WS_URL;
 
+console.log('API Base URL:', API_BASE_URL);
+
 if (!API_BASE_URL) {
     console.error('VITE_API_URL environment variable is not set');
 }

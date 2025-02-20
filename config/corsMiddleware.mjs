@@ -1,39 +1,32 @@
 import cors from "cors";
-import dotenv from "dotenv";
-import logger from "./logger.mjs";
-
-dotenv.config();
 
 const allowedOrigins = [
-    'https://fueldeliveryapp-1.onrender.com',
-    'http://localhost:3000',
-    'http://localhost:5173'
+    'https://fueldeliveryapp-1.onrender.com',    // Production frontend
+    'https://fuel-delivery-app.onrender.com',    // Alternative frontend URL
+    'http://localhost:5173',                     // Development frontend
+    'http://localhost:3000'                      // Development backend
 ];
 
-const corsMiddleware = [
-    // First middleware to handle CORS preflight
-    (req, res, next) => {
-        const origin = req.headers.origin;
+const corsOptions = {
+    origin: function(origin, callback) {
+        console.log('CORS Request from origin:', origin);
+        
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) {
+            return callback(null, true);
+        }
+
         if (allowedOrigins.includes(origin)) {
-            res.header('Access-Control-Allow-Origin', origin);
-            res.header('Access-Control-Allow-Credentials', 'true');
-            res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-            res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+            return callback(null, true);
         }
 
-        if (req.method === 'OPTIONS') {
-            return res.sendStatus(200);
-        }
-        next();
+        console.log('CORS blocked for origin:', origin);
+        return callback(new Error('Not allowed by CORS'));
     },
-    
-    // Then the cors package
-    cors({
-        origin: allowedOrigins,
-        credentials: true,
-        methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
-    })
-];
+    credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Access-Control-Allow-Origin']
+};
 
-export { corsMiddleware };
+export default cors(corsOptions);

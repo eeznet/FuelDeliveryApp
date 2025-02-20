@@ -7,8 +7,7 @@ const API_URL = import.meta.env.PROD
 
 console.log('API URL Configuration:', {
     env: import.meta.env.MODE,
-    url: API_URL,
-    baseURL: API_URL
+    url: API_URL
 });
 
 const api = axios.create({
@@ -16,7 +15,8 @@ const api = axios.create({
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Origin': 'https://fueldeliveryapp-1.onrender.com'
     },
     timeout: 10000
 });
@@ -31,6 +31,10 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+        
+        // Ensure CORS headers
+        config.headers['Origin'] = 'https://fueldeliveryapp-1.onrender.com';
+        
         console.log('Making request:', {
             fullUrl: `${config.baseURL}${config.url}`,
             method: config.method,

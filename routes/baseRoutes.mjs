@@ -9,8 +9,12 @@ const router = express.Router();
 router.get('/test', (req, res) => {
     logger.info('Test endpoint hit');
     res.json({
+        success: true,
         message: 'API is accessible',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        cors: {
+            origin: req.headers.origin || 'no origin'
+        }
     });
 });
 

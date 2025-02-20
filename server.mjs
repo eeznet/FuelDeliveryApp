@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes.mjs';
 import invoiceRoutes from './routes/invoiceRoutes.mjs';
 import userRoutes from './routes/userRoutes.mjs';
 import cors from "cors";
+import connectMongoDB from './config/mongoose.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -184,14 +185,8 @@ const MONGODB_URI = process.env.MONGO_URI || 'mongodb+srv://eeznetsolutions:Yp3m
 // Database connection
 const connectDB = async () => {
     try {
-        // Connect to MongoDB with options
-        await mongoose.connect(MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            retryWrites: true,
-            w: 'majority'
-        });
-        logger.info('✅ MongoDB connected');
+        // Connect to MongoDB
+        await connectMongoDB();
         
         // Connect to PostgreSQL
         const client = await pool.connect();

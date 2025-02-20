@@ -21,7 +21,8 @@ export const apiConfig = {
     headers: {
         'Content-Type': 'application/json'
     },
-    withCredentials: true
+    withCredentials: true,
+    timeout: 10000
 };
 
 export const wsConfig = {

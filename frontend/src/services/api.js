@@ -3,7 +3,7 @@ import { apiConfig } from '../config/api';
 
 const api = axios.create(apiConfig);
 
-// Simplified request interceptor
+// Request interceptor
 api.interceptors.request.use(
     (config) => {
         console.log(`Making ${config.method.toUpperCase()} request to ${config.url}`);
@@ -16,23 +16,17 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Simplified response interceptor
+// Response interceptor
 api.interceptors.response.use(
     (response) => response.data,
     (error) => {
-        if (error.response) {
-            // Server responded with error
-            console.error('Server error:', error.response.data);
-            return Promise.reject(error.response.data);
-        } else if (error.request) {
-            // Request made but no response
-            console.error('Network error - no response');
-            return Promise.reject({ message: 'Network error - please try again' });
-        } else {
-            // Request setup failed
-            console.error('Request failed:', error.message);
-            return Promise.reject({ message: 'Request failed - please try again' });
-        }
+        console.error('API Error:', {
+            message: error.message,
+            response: error.response,
+            status: error.response?.status,
+            config: error.config
+        });
+        return Promise.reject(error.response?.data || error);
     }
 );
 
@@ -51,17 +45,7 @@ api.interceptors.response.use(null, async (error) => {
 });
 
 export const auth = {
-    login: async (credentials) => {
-        try {
-            console.log('Attempting login with:', credentials);
-            const response = await api.post('/auth/login', credentials);
-            console.log('Login response:', response);
-            return response;
-        } catch (error) {
-            console.error('Login error:', error);
-            throw error;
-        }
-    },
+    login: (credentials) => api.post('/auth/login', credentials),
     register: (userData) => api.post('/auth/register', userData),
     logout: () => api.post('/auth/logout'),
     getProfile: () => api.get('/auth/me')

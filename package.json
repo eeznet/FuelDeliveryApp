@@ -13,7 +13,7 @@
     "test:deployment:prod": "cross-env NODE_ENV=production node scripts/test-deployment.mjs",
     "predeploy": "npm run test:deployment",
     "deploy": "git push render main",
-    "build": "cd frontend && npm install && npm run build",
+    "build": "echo 'No build step needed'",
     "postbuild": "xcopy /E /I frontend\\dist public",
     "audit:fix": "npm audit fix --force",
     "prestart": "npm audit fix"

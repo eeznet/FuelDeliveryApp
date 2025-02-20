@@ -21,24 +21,13 @@ const app = express();
 // Initialize router once
 const router = express.Router();
 
-// Health check route under /api/health
+// Health check route - remove /api prefix since it's added by mounting
 router.get('/health', (req, res) => {
     logger.info('✅ Health check endpoint hit');
     res.status(200).json({
         status: 'ok',
         message: 'Server is healthy',
         timestamp: new Date().toISOString()
-    });
-});
-
-// Move this before other route definitions
-app.get('/api', (req, res) => {
-    logger.info('✅ API root endpoint hit');
-    res.json({ 
-        success: true,
-        message: 'Fuel Delivery API is running',
-        environment: process.env.NODE_ENV,
-        version: '1.0.0'
     });
 });
 
@@ -100,11 +89,11 @@ if (DEBUG) {
     });
 }
 
-// Mount routes with proper prefixes
-app.use('/api', router);  // Base router for /api
-app.use('/api/auth', authRoutes);  // Auth routes with /api/auth prefix
-app.use('/api/user', userRoutes);  // User routes with /api/user prefix
-app.use('/api/invoice', invoiceRoutes);  // Invoice routes with /api/invoice prefix
+// Mount routes with proper prefixes - keep this order
+app.use('/api/auth', authRoutes);      // Auth routes first
+app.use('/api/user', userRoutes);      // Then user routes
+app.use('/api/invoice', invoiceRoutes); // Then invoice routes
+app.use('/api', router);               // Base router last
 
 // Static files after API routes
 app.use(express.static(path.join(__dirname, 'public')));
@@ -119,23 +108,23 @@ app.get('*', (req, res) => {
     });
 });
 
-// Print registered routes on startup
+// Update route logging
 console.log('=== REGISTERED ROUTES ===');
-app._router.stack.forEach((middleware) => {
-    if (middleware.route) {
-        // Log full path including prefix
-        const path = middleware.route.path;
-        console.log(`${Object.keys(middleware.route.methods)} /api${path}`);
-    } else if (middleware.name === 'router') {
-        middleware.handle.stack.forEach((handler) => {
-            if (handler.route) {
-                // Log full path including prefix
-                const path = handler.route.path;
-                console.log(`${Object.keys(handler.route.methods)} /api${path}`);
-            }
-        });
-    }
-});
+function logRoutes(stack, prefix = '') {
+    stack.forEach((middleware) => {
+        if (middleware.route) {
+            const methods = Object.keys(middleware.route.methods);
+            const path = middleware.route.path;
+            console.log(`${methods} ${prefix}${path}`);
+        } else if (middleware.name === 'router') {
+            const newPrefix = prefix + middleware.regexp.toString()
+                .match(/^\/\^((?:\\[.*+?^${}()|[\]\\\/]|[^.*+?^${}()|[\]\\\/])*)\\\//)[1]
+                .replace(/\\\//g, '/');
+            logRoutes(middleware.handle.stack, newPrefix);
+        }
+    });
+}
+logRoutes(app._router.stack);
 console.log('========================');
 
 // Add after all route definitions

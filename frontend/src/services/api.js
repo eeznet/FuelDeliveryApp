@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://fuel-delivery-backend.onrender.com/api';
+const BASE_URL = process.env.NODE_ENV === 'production'
+    ? 'https://fueldeliverywebapp.onrender.com/api'
+    : 'http://localhost:3000/api';
 
 console.log('API Base URL:', BASE_URL);
 

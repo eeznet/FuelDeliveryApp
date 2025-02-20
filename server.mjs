@@ -100,11 +100,11 @@ if (DEBUG) {
     });
 }
 
-// Then mount other routes
-app.use('/api', router);
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/invoice', invoiceRoutes);
+// Mount routes with proper prefixes
+app.use('/api', router);  // Base router for /api
+app.use('/api/auth', authRoutes);  // Auth routes with /api/auth prefix
+app.use('/api/user', userRoutes);  // User routes with /api/user prefix
+app.use('/api/invoice', invoiceRoutes);  // Invoice routes with /api/invoice prefix
 
 // Static files after API routes
 app.use(express.static(path.join(__dirname, 'public')));
@@ -123,11 +123,15 @@ app.get('*', (req, res) => {
 console.log('=== REGISTERED ROUTES ===');
 app._router.stack.forEach((middleware) => {
     if (middleware.route) {
-        console.log(`${Object.keys(middleware.route.methods)} ${middleware.route.path}`);
+        // Log full path including prefix
+        const path = middleware.route.path;
+        console.log(`${Object.keys(middleware.route.methods)} /api${path}`);
     } else if (middleware.name === 'router') {
         middleware.handle.stack.forEach((handler) => {
             if (handler.route) {
-                console.log(`${Object.keys(handler.route.methods)} ${handler.route.path}`);
+                // Log full path including prefix
+                const path = handler.route.path;
+                console.log(`${Object.keys(handler.route.methods)} /api${path}`);
             }
         });
     }

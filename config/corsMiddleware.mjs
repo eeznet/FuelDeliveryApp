@@ -2,11 +2,12 @@ import cors from 'cors';
 import logger from './logger.mjs';
 
 const allowedOrigins = [
-    'https://fueldeliveryapp-1.onrender.com',
-    'http://localhost:3000',
-    'http://localhost:3001'
-];
-
+    'https://fueldeliveryapp-1.onrender.com', // Frontend URL
+    'https://fueldeliverywebapp.onrender.com', // Backend URL (in case it's used for requests from another server)
+    'http://localhost:3000', // Local development
+    'http://localhost:3001', // Local development (if using multiple ports)
+  ];
+  
 const corsOptions = {
     origin: function(origin, callback) {
         logger.info('CORS Request from origin:', origin);

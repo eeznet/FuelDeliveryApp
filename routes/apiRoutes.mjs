@@ -5,7 +5,15 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Deliveries Routes
+// ✅ Test API route
+router.get('/test', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "API is working correctly!"
+    });
+});
+
+// ✅ Deliveries Routes
 router.get('/deliveries/driver', auth, checkRole(['driver']), async (req, res) => {
     try {
         const result = await pool.query(
@@ -19,7 +27,7 @@ router.get('/deliveries/driver', auth, checkRole(['driver']), async (req, res) =
     }
 });
 
-// Admin Stats Route
+// ✅ Admin Stats Route
 router.get('/admin/stats', auth, checkRole(['admin']), async (req, res) => {
     try {
         const stats = {
@@ -35,7 +43,7 @@ router.get('/admin/stats', auth, checkRole(['admin']), async (req, res) => {
     }
 });
 
-// Owner Stats Route
+// ✅ Owner Stats Route
 router.get('/owner/stats', auth, checkRole(['owner']), async (req, res) => {
     try {
         const stats = {
@@ -51,83 +59,7 @@ router.get('/owner/stats', auth, checkRole(['owner']), async (req, res) => {
     }
 });
 
-// Price Management Routes
-router.post('/price', auth, checkRole(['owner']), async (req, res) => {
-    try {
-        const { pricePerLiter } = req.body;
-        await pool.query(
-            'INSERT INTO fuel_prices (price_per_liter, created_by) VALUES ($1, $2)',
-            [pricePerLiter, req.user.id]
-        );
-        res.json({ success: true, message: 'Price updated successfully' });
-    } catch (error) {
-        logger.error('Error updating fuel price:', error);
-        res.status(500).json({ success: false, message: 'Failed to update price' });
-    }
-});
-
-// Admin Routes
-router.get('/admin/users', auth, checkRole(['admin']), async (req, res) => {
-    try {
-        const result = await pool.query(
-            'SELECT id, name, email, role, is_active FROM users WHERE role != $1',
-            ['owner']
-        );
-        res.json(result.rows);
-    } catch (error) {
-        logger.error('Error fetching users:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch users' });
-    }
-});
-
-router.put('/admin/users/:id', auth, checkRole(['admin']), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { is_active } = req.body;
-        
-        await pool.query(
-            'UPDATE users SET is_active = $1 WHERE id = $2',
-            [is_active, id]
-        );
-        
-        res.json({ success: true, message: 'User updated successfully' });
-    } catch (error) {
-        logger.error('Error updating user:', error);
-        res.status(500).json({ success: false, message: 'Failed to update user' });
-    }
-});
-
-// Delivery Routes
-router.put('/deliveries/:id/status', auth, checkRole(['driver']), async (req, res) => {
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
-        
-        const { id } = req.params;
-        const { status } = req.body;
-        
-        await client.query(
-            'UPDATE deliveries SET status = $1, completed_at = NOW() WHERE id = $2 AND driver_id = $3',
-            [status, id, req.user.id]
-        );
-        
-        await client.query(
-            'UPDATE invoices SET status = $1 WHERE id = (SELECT invoice_id FROM deliveries WHERE id = $2)',
-            [status, id]
-        );
-        
-        await client.query('COMMIT');
-        res.json({ success: true, message: 'Delivery status updated' });
-    } catch (error) {
-        await client.query('ROLLBACK');
-        logger.error('Error updating delivery status:', error);
-        res.status(500).json({ success: false, message: 'Failed to update delivery status' });
-    } finally {
-        client.release();
-    }
-});
-
-// Health Check Route
+// ✅ Health Check Route
 router.get('/health', (req, res) => {
     res.json({
         status: 'ok',

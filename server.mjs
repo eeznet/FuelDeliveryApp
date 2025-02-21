@@ -21,19 +21,35 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Fix CORS Issue - Allow Frontend Domain
+// ✅ Fix CORS - Allow Frontend Domain
 const allowedOrigins = [
   "https://fueldeliveryapp-1.onrender.com",
-  "http://localhost:3000", // Keep this for local testing
+  "http://localhost:3000", // Keep for local testing
 ];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true, // Allows cookies if needed
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// ✅ Handle Preflight Requests Manually (Important!)
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.status(204).send();
+});
 
 // ✅ Middleware
 app.use(bodyParser.json());
@@ -49,7 +65,7 @@ app.use("/api", baseRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/invoice", invoiceRoutes);
 app.use("/api/user", userRoutes);
-app.use("/api", apiRoutes); // Ensure all API routes are included
+app.use("/api", apiRoutes);
 
 // ✅ Root Endpoint
 app.get("/", (req, res) => {

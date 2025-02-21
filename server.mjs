@@ -21,10 +21,10 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Fix CORS - Allow Frontend Domain
+// ✅ Fix CORS - Explicitly Allow Frontend Domain
 const allowedOrigins = [
-  "https://fueldeliveryapp-1.onrender.com",
-  "http://localhost:3000", // Keep for local testing
+  "https://fueldeliveryapp-1.onrender.com", // ✅ Frontend
+  "http://localhost:3000", // ✅ Local Development
 ];
 
 app.use(
@@ -55,7 +55,7 @@ app.options("*", (req, res) => {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// ✅ Static files
+// ✅ Static Files
 app.use(express.static(path.join(__dirname, "public")));
 
 // ✅ Base Routes (Health Check)

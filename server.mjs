@@ -10,7 +10,7 @@ import authRoutes from "./routes/authRoutes.mjs";
 import invoiceRoutes from "./routes/invoiceRoutes.mjs";
 import userRoutes from "./routes/userRoutes.mjs";
 import apiRoutes from "./routes/apiRoutes.mjs";
-import cors from "cors";
+import corsMiddleware from "./config/corsMiddleware.mjs"; // Import CORS middleware
 import connectMongoDB from "./config/mongoose.mjs";
 import baseRoutes from "./routes/baseRoutes.mjs";
 
@@ -21,35 +21,8 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Fix CORS - Explicitly Allow Frontend Domain
-const allowedOrigins = [
-  "https://fueldeliveryapp-1.onrender.com", // ✅ Frontend
-  "http://localhost:3000", // ✅ Local Development
-];
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-// ✅ Handle Preflight Requests Manually (Important!)
-app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.status(204).send();
-});
+// ✅ Use CORS Middleware from config
+app.use(corsMiddleware); // This already handles preflight and origin checking
 
 // ✅ Middleware
 app.use(bodyParser.json());

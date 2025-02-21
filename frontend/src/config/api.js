@@ -1,5 +1,5 @@
 const API_BASE_URL = import.meta.env.PROD 
-    ? 'https://fueldeliverywebapp.onrender.com/api'
+    ? 'const API_BASE_URL = "https://fueldeliverywebapp.onrender.com/api";'
     : 'http://localhost:3000/api';
 const WS_URL = import.meta.env.VITE_WS_URL;
 

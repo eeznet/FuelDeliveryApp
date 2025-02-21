@@ -3,8 +3,16 @@ import { testConnection as testPostgres } from '../config/database.mjs';
 import connectMongoDB from '../config/mongoose.mjs';
 import logger from '../config/logger.mjs';
 
-const BACKEND_URL = 'https://fueldeliverywebapp.onrender.com';
-const FRONTEND_URL = 'https://fueldeliveryapp-1.onrender.com';
+// Use localhost for development, production URL for deployment
+const BACKEND_URL = process.env.NODE_ENV === 'production' 
+    ? 'https://fueldeliverywebapp.onrender.com'
+    : 'http://localhost:3000';
+
+const FRONTEND_URL = process.env.NODE_ENV === 'production'
+    ? 'https://fueldeliveryapp-1.onrender.com'
+    : 'http://localhost:5173';
+
+logger.info('Using backend URL:', BACKEND_URL);
 
 async function testSystem() {
     try {
@@ -16,7 +24,10 @@ async function testSystem() {
 
         // 2. Test Backend API
         logger.info('Testing Backend API...');
+        logger.info('Trying to reach:', `${BACKEND_URL}/api/test`);
         const apiTest = await axios.get(`${BACKEND_URL}/api/test`);
+        logger.info('Test endpoint response:', apiTest.data);
+        
         const healthCheck = await axios.get(`${BACKEND_URL}/api/health`);
         logger.info('✅ Backend API responding');
 
@@ -58,7 +69,8 @@ async function testSystem() {
             message: error.message,
             component: error.config?.url || 'unknown',
             status: error.response?.status,
-            data: error.response?.data
+            data: error.response?.data,
+            stack: error.stack
         });
         return false;
     }

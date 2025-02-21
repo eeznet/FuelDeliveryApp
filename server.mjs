@@ -21,8 +21,9 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Use CORS Middleware from config
-app.use(corsMiddleware); // This already handles preflight and origin checking
+// ✅ CORS Middleware
+app.use(corsMiddleware);
+app.options("*", corsMiddleware); // Handle preflight requests
 
 // ✅ Middleware
 app.use(bodyParser.json());
@@ -40,8 +41,13 @@ app.use("/api/invoice", invoiceRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api", apiRoutes);
 
-// ✅ Root Endpoint
+// ✅ Root Endpoint (Add CORS Headers)
 app.get("/", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
   res.json({
     status: "ok",
     message: "Fuel Delivery API is running",
@@ -50,6 +56,11 @@ app.get("/", (req, res) => {
 
 // ✅ Error Handling Middleware
 app.use((err, req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
   logger.error("❌ Unhandled Error:", err);
   res.status(500).json({
     success: false,

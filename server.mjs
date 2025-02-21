@@ -21,16 +21,18 @@ dotenv.config();
 
 const app = express();
 
-// Basic middleware
-app.use(express.json());
+// Middleware
+app.use(cors(corsMiddleware));
 app.use(bodyParser.json());
-app.use(corsMiddleware);
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// API Routes - baseRoutes should be first to catch /api/test
+// Mount base routes first (includes test and health endpoints)
 app.use('/api', baseRoutes);
+
+// Mount other routes
 app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
 app.use('/api/invoice', invoiceRoutes);
+app.use('/api/user', userRoutes);
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -56,11 +58,7 @@ app.use((err, req, res, next) => {
 const connectDB = async () => {
     try {
         await connectMongoDB();
-        const pgConnected = await testConnection();
-        if (!pgConnected) {
-            throw new Error('PostgreSQL connection failed');
-        }
-        logger.info('✅ All database connections established');
+        await testConnection(); // Test PostgreSQL connection
     } catch (error) {
         logger.error('❌ Database connection error:', error);
         if (process.env.NODE_ENV !== 'production') {

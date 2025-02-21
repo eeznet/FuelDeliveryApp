@@ -1,6 +1,6 @@
 import express from 'express';
 import logger from '../config/logger.mjs';
-import { pool } from '../config/database.mjs';
+import pool from '../config/database.mjs';
 import mongoose from 'mongoose';
 
 const router = express.Router();
@@ -10,7 +10,7 @@ router.get('/test', (req, res) => {
     logger.info('Test endpoint hit');
     res.json({
         success: true,
-        message: 'API is accessible',
+        message: 'API is working',
         timestamp: new Date().toISOString()
     });
 });
@@ -18,10 +18,10 @@ router.get('/test', (req, res) => {
 // Health check endpoint
 router.get('/health', async (req, res) => {
     try {
-        // Test PostgreSQL connection
+        // Test PostgreSQL
         const pgResult = await pool.query('SELECT NOW()');
         
-        // Test MongoDB connection
+        // Test MongoDB
         const mongoStatus = mongoose.connection.readyState === 1;
 
         res.json({

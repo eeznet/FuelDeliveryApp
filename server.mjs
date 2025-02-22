@@ -21,9 +21,9 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Apply CORS Middleware (Fixes preflight issue)
+// ✅ Apply CORS Middleware
 app.use(corsMiddleware);
-app.options("*", corsMiddleware); // Handle preflight requests
+app.options("*", corsMiddleware); // ✅ Ensure preflight requests are handled
 
 // ✅ Middleware
 app.use(bodyParser.json());
@@ -41,9 +41,9 @@ app.use("/api/invoice", invoiceRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api", apiRoutes);
 
-// ✅ Root Endpoint (Ensures CORS Headers)
+// ✅ Root Endpoint (Add CORS Headers)
 app.get("/", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -54,15 +54,14 @@ app.get("/", (req, res) => {
   });
 });
 
-// ✅ Global Error Handling Middleware
+// ✅ Error Handling Middleware
 app.use((err, req, res, next) => {
-  logger.error("❌ Unhandled Error:", err);
-
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
+  logger.error("❌ Unhandled Error:", err);
   res.status(500).json({
     success: false,
     message: "Internal server error",
@@ -82,7 +81,7 @@ app.use((req, res) => {
 const connectDB = async () => {
   try {
     await connectMongoDB();
-    await testConnection(); // Test PostgreSQL connection
+    await testConnection();
     logger.info("✅ Database connections established successfully.");
   } catch (error) {
     logger.error("❌ Database connection error:", error);

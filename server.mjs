@@ -10,7 +10,7 @@ import authRoutes from "./routes/authRoutes.mjs";
 import invoiceRoutes from "./routes/invoiceRoutes.mjs";
 import userRoutes from "./routes/userRoutes.mjs";
 import apiRoutes from "./routes/apiRoutes.mjs";
-import corsMiddleware from "./config/corsMiddleware.mjs"; // Import CORS middleware
+import corsMiddleware from "./config/corsMiddleware.mjs";
 import connectMongoDB from "./config/mongoose.mjs";
 import baseRoutes from "./routes/baseRoutes.mjs";
 
@@ -21,7 +21,7 @@ dotenv.config();
 
 const app = express();
 
-// ✅ CORS Middleware
+// ✅ Apply CORS Middleware (Fixes preflight issue)
 app.use(corsMiddleware);
 app.options("*", corsMiddleware); // Handle preflight requests
 
@@ -41,9 +41,9 @@ app.use("/api/invoice", invoiceRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api", apiRoutes);
 
-// ✅ Root Endpoint (Add CORS Headers)
+// ✅ Root Endpoint (Ensures CORS Headers)
 app.get("/", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -54,14 +54,15 @@ app.get("/", (req, res) => {
   });
 });
 
-// ✅ Error Handling Middleware
+// ✅ Global Error Handling Middleware
 app.use((err, req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  logger.error("❌ Unhandled Error:", err);
+
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
-  logger.error("❌ Unhandled Error:", err);
   res.status(500).json({
     success: false,
     message: "Internal server error",

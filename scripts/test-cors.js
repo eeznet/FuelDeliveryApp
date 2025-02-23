@@ -1,7 +1,7 @@
 import axios from 'axios';
 import logger from '../config/logger.mjs';
 
-const testEndpoint = 'https://fuel-delivery-backend.onrender.com/api/auth/login';
+const testEndpoint = 'https://fueldeliverywebapp.onrender.com/api/auth/login';
 const testOrigin = 'https://fueldeliveryapp-1.onrender.com';
 
 async function testCORS() {
@@ -19,7 +19,7 @@ async function testCORS() {
         });
         logger.info('✅ OPTIONS success:', options.headers);
 
-        // Test actual request
+        // Test actual login
         logger.info('Testing POST request...');
         const login = await axios({
             method: 'POST',
@@ -29,8 +29,8 @@ async function testCORS() {
                 'Content-Type': 'application/json'
             },
             data: {
-                email: 'test@example.com',
-                password: 'password123'
+                email: 'moerayblog@gmail.com',
+                password: 'admin123'
             }
         });
         logger.info('✅ POST success:', login.data);
@@ -39,7 +39,8 @@ async function testCORS() {
         logger.error('❌ Test failed:', {
             message: error.message,
             response: error.response?.data,
-            headers: error.response?.headers
+            headers: error.response?.headers,
+            url: error.config?.url
         });
     }
 }

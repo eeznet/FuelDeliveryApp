@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Update the API URL configuration
 const API_URL = import.meta.env.PROD 
-    ? 'https://fuel-delivery-backend.onrender.com/api'
+    ? 'https://fueldeliverywebapp.onrender.com/api'
     : 'http://localhost:3000/api';
 
 console.log('API URL Configuration:', {

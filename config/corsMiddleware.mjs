@@ -5,7 +5,7 @@ const allowedOrigins = [
   "https://fueldeliveryapp-1.onrender.com", // ✅ Frontend URL
   "https://fueldeliverywebapp.onrender.com", // ✅ Backend (if accessed externally)
   "http://localhost:3000", // ✅ Local development
-  "http://localhost:3001", // ✅ Local development (if using multiple ports)
+  "http://localhost:5173"
 ];
 
 const corsOptions = {

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Update the API URL configuration
 const API_URL = import.meta.env.PROD 
-    ? 'https://fueldeliverywebapp.onrender.com/api'
+    ? 'https://fuel-delivery-backend.onrender.com/api'
     : 'http://localhost:3000/api';
 
 console.log('API URL Configuration:', {
@@ -57,7 +57,7 @@ api.interceptors.request.use(
         }
         
         // Ensure CORS headers
-        config.headers['Origin'] = 'https://fueldeliveryapp-1.onrender.com';
+        config.headers['Origin'] = window.location.origin;
         
         console.log('Making request:', {
             fullUrl: `${config.baseURL}${config.url}`,

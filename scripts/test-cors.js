@@ -1,12 +1,13 @@
 import axios from 'axios';
+import logger from '../config/logger.mjs';
 
-const testEndpoint = 'https://fueldeliverywebapp.onrender.com/api/auth/login';
+const testEndpoint = 'https://fuel-delivery-backend.onrender.com/api/auth/login';
 const testOrigin = 'https://fueldeliveryapp-1.onrender.com';
 
 async function testCORS() {
     try {
         // Test OPTIONS (preflight)
-        console.log('Testing OPTIONS request...');
+        logger.info('Testing OPTIONS request...');
         const options = await axios({
             method: 'OPTIONS',
             url: testEndpoint,
@@ -16,10 +17,10 @@ async function testCORS() {
                 'Access-Control-Request-Headers': 'Content-Type,Authorization'
             }
         });
-        console.log('OPTIONS success:', options.headers);
+        logger.info('✅ OPTIONS success:', options.headers);
 
-        // Test actual login with real owner credentials
-        console.log('\nTesting POST request...');
+        // Test actual request
+        logger.info('Testing POST request...');
         const login = await axios({
             method: 'POST',
             url: testEndpoint,
@@ -28,14 +29,14 @@ async function testCORS() {
                 'Content-Type': 'application/json'
             },
             data: {
-                email: 'moerayblog@gmail.com',    // Use real owner email
-                password: 'admin123'              // Use real owner password
+                email: 'test@example.com',
+                password: 'password123'
             }
         });
-        console.log('POST success:', login.data);
+        logger.info('✅ POST success:', login.data);
 
     } catch (error) {
-        console.error('Test failed:', {
+        logger.error('❌ Test failed:', {
             message: error.message,
             response: error.response?.data,
             headers: error.response?.headers

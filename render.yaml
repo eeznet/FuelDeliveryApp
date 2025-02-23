@@ -4,28 +4,23 @@ services:
     env: node
     buildCommand: npm install
     startCommand: node server.mjs
-    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 5432
+        value: 3000
       - key: MONGO_URI
-        value: mongodb+srv://eeznetsolutions:Yp3mmebgxnQHA6XG@fueldelapp.iaiqh.mongodb.net/fuelDeliveryApp?retryWrites=true&w=majority
-      - key: DB_HOST
-        value: dpg-cunj0p23esus73ciric0-a
-      - key: DB_NAME
-        value: fuel_delivery_db
-      - key: DB_USER
-        value: fuel_delivery_user
-      - key: DB_PASSWORD
-        value: vcDMwd55ajsFUnZqlPuItAm1k9bIn88N
-      - key: JWT_SECRET
-        value: 6f7d2fa0a35e8b4136b1c44781e63df57d22a0ad739b4f358f234fd013ef29e736cf722e730ab1d8b9e738120ac8e5edbbdb7c23ad2c6a99d7b8b705e68f0b76b
-      - key: GOOGLE_MAPS_API_KEY
-        value: AIzaSyA9Lhvp93iB6jiSs1teK48IRgobjhy_NZ4
-      - key: NODE_VERSION
-        value: 18.0.0
+        fromDatabase:
+          name: fuel-delivery-mongodb
+          property: connectionString
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fuel-delivery-postgres
+          property: connectionString
+      - key: CORS_ORIGIN
+        value: https://fueldeliveryapp-1.onrender.com
+    healthCheckPath: /api/health
+    autoDeploy: true
 
   - type: web
     name: fueldeliverywebapp-frontend

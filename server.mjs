@@ -21,9 +21,8 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Apply CORS Middleware
+// Apply CORS middleware first
 app.use(corsMiddleware);
-app.options("*", corsMiddleware); // ✅ Ensure preflight requests are handled
 
 // ✅ Middleware
 app.use(bodyParser.json());

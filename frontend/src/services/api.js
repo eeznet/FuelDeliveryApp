@@ -1,13 +1,11 @@
 import axios from 'axios';
 
 // Update the API URL configuration
-const API_URL = import.meta.env.PROD 
-    ? 'https://fueldeliverywebapp.onrender.com/api'
-    : 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-console.log('API URL Configuration:', {
-    env: import.meta.env.MODE,
-    url: API_URL
+console.log('API Configuration:', {
+    url: API_URL,
+    mode: import.meta.env.MODE
 });
 
 const api = axios.create({
@@ -23,7 +21,7 @@ const api = axios.create({
 // Add request interceptor for debugging
 api.interceptors.request.use(request => {
     console.log('Making request:', {
-        url: request.url,
+        fullUrl: `${request.baseURL}${request.url}`,
         method: request.method,
         headers: request.headers
     });
